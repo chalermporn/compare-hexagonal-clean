@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1280,820 --screenshot=/tmp/arch-dark.png file://__TRACKED_VAR__/index.html)",
+      "Read(//tmp/**)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --force-dark-mode --window-size=1280,820 --screenshot=/tmp/arch-d2.png file://__TRACKED_VAR__/index.html)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --force-dark-mode --window-size=1280,2400 --screenshot=/tmp/arch-tall.png file://__TRACKED_VAR__/index.html)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --window-size=1280,820 --screenshot=/tmp/j-light.png file://__TRACKED_VAR__/index.html)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --force-dark-mode --window-size=1280,820 --screenshot=/tmp/j-dark.png file://__TRACKED_VAR__/index.html)",
+      "Bash(sudo cp -p /etc/hosts /etc/hosts.bak.__TRACKED_VAR__)",
+      "Bash(sudo cp /tmp/hosts.new /etc/hosts)",
+      "Bash(sudo dscacheutil -flushcache)",
+      "Bash(sudo killall -HUP mDNSResponder)"
+    ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp"
+    ]
+  }
+}
