@@ -1,0 +1,5 @@
+slidev/node_modules/*
+node_modules
+dist
+.slidev
+*.local

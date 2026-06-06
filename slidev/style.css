@@ -1,0 +1,65 @@
+/* ============================================================
+   ArchCompare — global design tokens (ตรงกับ styles.css ต้นฉบับ · Krungthai CI)
+   โหลด global ทั้ง deck (Slidev auto-import style.css)
+   ============================================================ */
+:root {                 /* LIGHT */
+  --bg:#f4f7fb; --surface:#ffffff; --surface-2:#eef2f8; --line:#d8dfea;
+  --text:#0f172a; --text-dim:#475569; --text-mute:#64748b;
+  --hex:#0086C2; --hex-2:#005A87; --clean:#0E5C99; --clean-2:#002140;
+  --code-bg:#f8fafc; --on-accent:#ffffff;
+}
+html.dark {             /* DARK */
+  --bg:#0a0c10; --surface:#11151c; --surface-2:#161b24; --line:#232a36;
+  --text:#e8edf4; --text-dim:#9aa6b6; --text-mute:#66718a;
+  --hex:#00A3E4; --hex-2:#0077AB; --clean:#77C3E3; --clean-2:#002140;
+  --code-bg:#0c0f15; --on-accent:#06121a;
+}
+
+/* base surfaces + type */
+.slidev-layout { background:var(--bg) !important; color:var(--text); }
+.slidev-layout h1, .slidev-layout h2, .slidev-layout h3 { font-family:"Prompt",sans-serif; color:var(--text); }
+.slidev-layout strong, .slidev-layout b, .slidev-layout em { color:var(--text); font-style:normal; font-weight:600; }
+
+/* gradients (135deg ตามต้นฉบับ) */
+.grad-hex   { background:linear-gradient(135deg,var(--hex),var(--hex-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.grad-clean { background:linear-gradient(135deg,var(--clean),var(--clean-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+/* kicker pill */
+.kicker { display:inline-block; font-size:.72rem; letter-spacing:2.5px; text-transform:uppercase;
+  color:var(--text-mute); padding:5px 14px; border:1px solid var(--line); border-radius:999px; margin-bottom:14px; }
+.k-hex   { color:var(--hex);   border-color:color-mix(in srgb, var(--hex) 45%, transparent); }
+.k-clean { color:var(--clean); border-color:color-mix(in srgb, var(--clean) 45%, transparent); }
+
+/* accent text (ต้องชนะ .slidev-layout h3 ที่ specificity สูงกว่า) */
+.slidev-layout .c-hex { color:var(--hex) !important; }
+.slidev-layout .c-clean { color:var(--clean) !important; }
+
+/* cards (= .pillar) — tint อ่อนให้เห็นขอบทั้งสองโหมด */
+.ds-card { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px 20px; height:100%; }
+.ds-card--hex   { border-color:color-mix(in srgb, var(--hex) 42%, var(--line));   background:color-mix(in srgb, var(--hex) 7%, var(--surface)); }
+.ds-card--clean { border-color:color-mix(in srgb, var(--clean) 48%, var(--line)); background:color-mix(in srgb, var(--clean) 8%, var(--surface)); }
+.ds-card h3 { font-family:"Prompt",sans-serif; }
+.ds-card p { color:var(--text-dim); }
+
+/* comparison table */
+.slidev-layout table { font-size:.92rem; border-collapse:collapse; }
+.slidev-layout th, .slidev-layout td { border-bottom:1px solid var(--line) !important; padding:12px 16px; }
+.slidev-layout thead th { background:var(--surface-2); }
+.slidev-layout tbody td:first-child { color:var(--text-mute); }
+.slidev-layout .th-hex { color:var(--hex) !important; font-weight:600; }
+.slidev-layout .th-clean { color:var(--clean) !important; font-weight:600; }
+
+/* code block bg ตาม palette */
+.slidev-code, .slidev-layout pre { background:var(--code-bg) !important; }
+
+/* quote / divider */
+.ds-quote { border-left:3px solid var(--hex); padding-left:1rem; color:var(--text-dim); }
+.ds-divider { border-color:var(--line) !important; }
+
+/* cover + section: พื้นเรียบตาม scheme (ตัด photo/overlay ของ seriph) */
+.slidev-layout.cover, .slidev-layout.section { background:var(--bg) !important; }
+.slidev-layout.cover { background-image:none !important; }
+.slidev-layout.cover::before, .slidev-layout.cover::after { display:none !important; }
+.slidev-layout.cover p, .slidev-layout.cover .hero-hint { color:var(--text-dim); }
+.slidev-layout.cover h1 { color:var(--text-dim); }   /* the "vs" */
+.slidev-layout.cover kbd { color:var(--text); }
