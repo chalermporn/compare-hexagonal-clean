@@ -6,6 +6,10 @@ plugins {
     kotlin("plugin.allopen") version "2.1.21"
     id("com.google.devtools.ksp") version "2.1.21-2.0.2"
     id("io.micronaut.application") version "4.6.2"
+    // Fat ("uber") jar for the Docker image — the application plugin does NOT bundle deps
+    // itself; `runnerJar` is a thin jar. Shadow provides the standalone build/libs/*-all.jar
+    // the Dockerfile copies. Pinned to 8.3.x to match the Micronaut 4.6.x integration.
+    id("com.gradleup.shadow") version "8.3.11"
 }
 
 version = "0.1.0"
@@ -21,6 +25,10 @@ dependencies {
     ksp("io.micronaut.data:micronaut-data-processor")
     ksp("io.micronaut.serde:micronaut-serde-processor")
     ksp("io.micronaut.validation:micronaut-validation-processor")
+    // OpenAPI: the processor reads @OpenAPIDefinition/@Operation/@Schema at build time and
+    // emits the spec (build/.../META-INF/swagger/*.yml) + the bundled UI HTML. Version is
+    // managed by the Micronaut 4.6 platform BOM — leave it unpinned to stay in lock-step.
+    ksp("io.micronaut.openapi:micronaut-openapi")
 
     // runtime
     implementation("io.micronaut:micronaut-http-server-netty")
@@ -31,6 +39,8 @@ dependencies {
     implementation("io.micronaut.data:micronaut-data-jdbc")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.flyway:micronaut-flyway")
+    // Swagger annotations used in controllers/DTOs (@Operation, @Schema, @ApiResponse, …).
+    implementation("io.swagger.core.v3:swagger-annotations")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
@@ -67,4 +77,10 @@ micronaut {
         incremental(true)
         annotations("com.ktb.shop.*")
     }
+}
+
+// Tell the OpenAPI KSP processor to also render the interactive UIs. It bundles the assets
+// into META-INF/swagger/views/** at build time, so the docs work fully offline (no CDN).
+ksp {
+    arg("micronaut.openapi.views.spec", "swagger-ui.enabled=true,redoc.enabled=true,rapidoc.enabled=true")
 }

@@ -72,6 +72,37 @@ curl -s localhost:8080/health
 
 ---
 
+## 📖 API Docs (Swagger / OpenAPI)
+
+สเปก OpenAPI 3 ถูก **generate ตอน build** โดย `micronaut-openapi` (KSP) จาก annotation บน
+controller/DTO — ไม่ใช่ runtime reflection ดังนั้นไม่เพิ่มภาระตอนรัน. asset ของ UI ถูก
+**bundle ลงในแอป** (ไม่พึ่ง CDN) จึงเปิดได้แม้ออฟไลน์.
+
+| สิ่งที่ได้ | URL (Docker, port 8080) | URL (local dev, port 9000) |
+|---|---|---|
+| **Swagger UI** (ลองยิง API ได้) | `/swagger-ui/` | `/swagger-ui/` |
+| **ReDoc** (อ่านสวย) | `/redoc/` | `/redoc/` |
+| **RapiDoc** | `/rapidoc/` | `/rapidoc/` |
+| **OpenAPI spec (YAML)** | `/swagger/hexagonal-shop-api-0.1.0.yml` | เหมือนกัน |
+
+```bash
+open http://localhost:8080/swagger-ui/          # หรือเปิดในเบราว์เซอร์
+curl -s http://localhost:8080/swagger/hexagonal-shop-api-0.1.0.yml   # ดึง spec ดิบ
+```
+
+**เปิดให้ใช้งานได้จริงอย่างไร** (รายละเอียดเชิงสถาปัตยกรรม):
+
+- `@OpenAPIDefinition` ที่ [Application.kt](src/main/kotlin/com/ktb/shop/Application.kt) ใส่ metadata ระดับ API (title/version/servers/tags)
+- `@Operation` / `@ApiResponse` / `@Schema` บน controller + DTO อธิบายทุก endpoint และทุก field
+- การ render UI สั่งผ่าน KSP arg ใน [build.gradle.kts](build.gradle.kts) (`micronaut.openapi.views.spec`)
+- spec + UI เสิร์ฟผ่าน `micronaut.router.static-resources` ใน [application.yml](src/main/resources/application.yml)
+- [Filters.kt](src/main/kotlin/com/ktb/shop/infra/web/Filters.kt) ผ่อน **CSP** เฉพาะ path เอกสาร (ของเดิม `default-src 'none'` จะบล็อก JS/CSS ของ UI) และยกเว้น path เอกสารจาก rate limiter
+
+> ⚠️ **Production:** เอกสารเปิดสาธารณะ = เพิ่ม attack surface. ก่อนขึ้น prod ควร gate ไว้หลัง
+> auth, จำกัดด้วย IP allowlist, หรือปิดด้วยการเอา `static-resources` ออก/แยก profile
+
+---
+
 ## 3. รันแบบ local dev (มี JDK 21)
 
 โปรเจกต์ใช้ Gradle wrapper — ถ้ายังไม่มี `gradlew` ให้ generate ครั้งเดียวด้วย Docker:
