@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hexagonal Architecture — deep dive for developers</title>
+<meta name="description" content="A hands-on deep dive into Hexagonal (Ports & Adapters) in Micronaut + Kotlin, built around a 1M-user e-commerce system — concepts, a full step-by-step tutorial, practices, glossary and FAQ. เจาะลึก Hexagonal จน junior ลงมือทำงานได้" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('kp-theme');
+      var sysLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      var theme = saved || (sysLight ? 'light' : 'dark');
+      if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      var savedL = localStorage.getItem('kp-lang');
+      var sysTh = (navigator.language || '').toLowerCase().indexOf('th') === 0;
+      var lang = savedL || (sysTh ? 'th' : 'en');
+      document.documentElement.setAttribute('data-lang', lang);
+      document.documentElement.setAttribute('lang', lang);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="bg-orbs" aria-hidden="true"><span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span></div>
+
+<!-- ============ NAV ============ -->
+<nav class="nav" id="nav">
+  <a href="index.html" class="nav-brand">
+    <img src="logo.jpeg" alt="Krungthai" class="brand-logo" />
+    <span class="brand-sep" aria-hidden="true"></span>
+    <span>Arch<span class="accent">Compare</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="back-link">← <span lang="en">Overview</span><span lang="th">กลับหน้าหลัก</span></a>
+    <a href="#why"><span lang="en">Why</span><span lang="th">ทำไม</span></a>
+    <a href="#concepts"><span lang="en">Concepts</span><span lang="th">แนวคิด</span></a>
+    <a href="#build"><span lang="en">Build it</span><span lang="th">ลงมือสร้าง</span></a>
+    <a href="#practice"><span lang="en">Practice</span><span lang="th">วิธีปฏิบัติ</span></a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-actions">
+    <button class="icon-btn lang-btn" id="langBtn" title="ไทย / English" aria-label="Toggle language"><span lang="en">TH</span><span lang="th">EN</span></button>
+    <button class="icon-btn pdf-btn" id="pdfBtn" title="Export as PDF" aria-label="Export as PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14"/></svg>
+      <span class="pdf-label">PDF</span>
+    </button>
+    <button class="icon-btn" id="themeBtn" title="Toggle light/dark" aria-label="Toggle theme" aria-pressed="false">
+      <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="hero">
+  <div class="hero-inner">
+    <p class="eyebrow reveal"><span lang="en">Deep dive · Micronaut + Kotlin</span><span lang="th">เจาะลึก · Micronaut + Kotlin</span></p>
+    <h1 class="hero-title reveal"><span class="grad-a">Hexagonal</span> <span lang="en">hands-on</span><span lang="th">ลงมือจริง</span></h1>
+    <p class="hero-sub reveal">
+      <span lang="en">Everything a junior dev needs to <strong>actually build</strong> with Ports &amp; Adapters — the why, the core concepts,
+      a full step-by-step tutorial, real practices, and a glossary. Built around one concrete system.</span>
+      <span lang="th">ทุกอย่างที่ junior dev ต้องรู้เพื่อ<strong>ลงมือสร้างจริง</strong>ด้วย Ports &amp; Adapters — ทำไมต้องมี, แนวคิดหลัก,
+      tutorial ทีละขั้นแบบเต็ม, วิธีปฏิบัติจริง และ glossary โดยอิงระบบจริงหนึ่งระบบตลอดทั้งหน้า</span>
+    </p>
+    <div class="callout info reveal" style="max-width:680px;margin:26px auto 0;text-align:left">
+      <span class="ttl">🛒 <span lang="en">Our running example</span><span lang="th">ระบบตัวอย่างที่ใช้ตลอดหน้า</span></span>
+      <span lang="en">An e-commerce + membership platform with <b>1,000,000 customers</b>, but only <b>1,000 products</b> and <b>100 categories</b>.
+      That lopsided scale will drive real design choices you'll see throughout.</span>
+      <span lang="th">แพลตฟอร์ม e-commerce + ระบบสมาชิก ที่มี <b>ลูกค้า 1,000,000 คน</b> แต่มี <b>สินค้าเพียง 1,000 รายการ</b> และ <b>100 หมวดหมู่</b>
+      ความไม่สมดุลของ scale นี้จะเป็นตัวกำหนดการตัดสินใจออกแบบจริงที่จะเห็นตลอดหน้า</span>
+    </div>
+    <div class="hero-cta reveal" style="margin-top:26px">
+      <a href="#why" class="btn btn-primary"><span lang="en">Start ↓</span><span lang="th">เริ่ม ↓</span></a>
+      <a href="#build" class="btn btn-ghost"><span lang="en">Jump to the tutorial</span><span lang="th">ข้ามไป tutorial</span></a>
+    </div>
+  </div>
+  <div class="scroll-hint"><span></span></div>
+</header>
+
+<main>
+
+<!-- ============ WHY ============ -->
+<section class="section narrow" id="why">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">The problem</span><span lang="th">ปัญหา</span></span>
+    <h2><span lang="en">Why bother with Hexagonal?</span><span lang="th">ทำไมต้องใช้ Hexagonal?</span></h2>
+    <p class="section-desc"><span lang="en">Start with what goes wrong when business logic and infrastructure are tangled together.</span><span lang="th">เริ่มจากสิ่งที่พังเมื่อ business logic ปนกับ infrastructure</span></p>
+  </div>
+  <div class="reveal">
+    <p class="lead"><span lang="en">Here's "register a customer" the way it's often first written — the rule, the database, and the web framework all in one class:</span><span lang="th">นี่คือ "สมัครสมาชิก" แบบที่มักเขียนกันตอนแรก — กฎธุรกิจ, ฐานข้อมูล และ web framework รวมกันอยู่ในคลาสเดียว:</span></p>
+    <div class="code-card"><div class="code-head">😵 <span lang="en">tangled — controller does everything</span><span lang="th">พันกัน — controller ทำทุกอย่าง</span></div><div class="code-block code-host" data-src="bad" data-lang="kotlin"></div></div>
+    <script type="text/plain" data-src-for="bad">
+@Controller("/customers")
+class CustomerController(private val db: JdbcOperations) {
+    @Post
+    fun register(@Body req: RegisterRequest): HttpResponse<Any> {
+        // business rule mixed with SQL, JSON and HTTP
+        val exists = db.queryForObject(
+            "SELECT count(*) FROM customers WHERE email = ?",
+            Long::class.java, req.email,
+        )
+        if (exists > 0) return HttpResponse.badRequest("email taken")
+        if (!req.email.contains("@")) return HttpResponse.badRequest("bad email")
+
+        db.execute("INSERT INTO customers(id, email, name) VALUES (?,?,?)") {
+            it.setString(1, req.id); it.setString(2, req.email); it.setString(3, req.name)
+        }
+        sendGrid.send(req.email, "Welcome!")        // and email, too
+        return HttpResponse.created(req)
+    }
+}
+    </script>
+    <div class="callout warn">
+      <span class="ttl">⚠️ <span lang="en">What hurts later</span><span lang="th">สิ่งที่จะเจ็บทีหลัง</span></span>
+      <span lang="en">To <b>unit-test the rule</b> you must boot a DB and a mail server. To move from Postgres to a sharded store (you have 1M customers!) you rewrite the controller. The same "email must be unique" rule gets copy-pasted into every entry point (REST, a CLI importer, a Kafka consumer). The business logic is <b>trapped</b> inside infrastructure.</span>
+      <span lang="th">จะ <b>unit-test กฎ</b> ต้องบูต DB และ mail server จริง จะย้ายจาก Postgres ไป store แบบ shard (มีลูกค้า 1M!) ต้องรื้อ controller กฎ "อีเมลห้ามซ้ำ" เดิมถูก copy-paste ไปทุกทางเข้า (REST, ตัว import CLI, Kafka consumer) — business logic ถูก <b>ขัง</b> อยู่ใน infrastructure</span>
+    </div>
+    <div class="callout good">
+      <span class="ttl">✅ <span lang="en">The Hexagonal idea in one line</span><span lang="th">แนวคิด Hexagonal ในบรรทัดเดียว</span></span>
+      <span lang="en">Put the business rules in a <b>core</b> that talks to the outside world only through <b>interfaces it owns</b> (ports). Everything technical — DB, web, email — becomes a replaceable <b>adapter</b> at the edge.</span>
+      <span lang="th">เอา business rule ไว้ใน <b>core</b> ที่คุยกับโลกภายนอกผ่าน <b>interface ที่ core เป็นเจ้าของ</b> (port) เท่านั้น ส่วนเรื่องเทคนิคทั้งหมด — DB, web, email — กลายเป็น <b>adapter</b> ที่ขอบซึ่งสลับได้</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONCEPTS ============ -->
+<section class="section narrow" id="concepts">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Mental model</span><span lang="th">โมเดลความคิด</span></span>
+    <h2><span lang="en">The five words you must own</span><span lang="th">5 คำที่ต้องเข้าใจให้ขึ้นใจ</span></h2>
+  </div>
+  <div class="concept-grid reveal">
+    <div class="concept-col hex">
+      <h3>⬡ <span lang="en">Core vocabulary</span><span lang="th">คำศัพท์แกนหลัก</span></h3>
+      <dl class="concept-list">
+        <div class="ci"><dt><span lang="en">Core (domain + use cases)</span><span lang="th">Core (domain + use cases)</span></dt><dd><span lang="en">Your business rules. Plain Kotlin — no Micronaut, no SQL, no HTTP. If you deleted the framework tomorrow, this code would still compile.</span><span lang="th">กฎธุรกิจของคุณ เป็น Kotlin ล้วน — ไม่มี Micronaut, ไม่มี SQL, ไม่มี HTTP ถ้าพรุ่งนี้ลบ framework ทิ้ง โค้ดนี้ก็ยัง compile ได้</span></dd></div>
+        <div class="ci"><dt>Port</dt><dd><span lang="en">An <b>interface the core declares</b> — a contract on its boundary. The core depends on the port, never on a concrete class.</span><span lang="th"><b>interface ที่ core ประกาศ</b> — เป็นสัญญาที่ขอบของ core, core พึ่งพา port ไม่เคยพึ่ง class จริง</span></dd></div>
+        <div class="ci"><dt><span lang="en">Driving port (inbound)</span><span lang="th">Driving port (ขาเข้า)</span></dt><dd><span lang="en">What the core <b>offers</b> the world: "register a customer", "place an order". Called <em>by</em> controllers, CLIs, tests.</span><span lang="th">สิ่งที่ core <b>เปิดให้</b> โลกภายนอก: "สมัครสมาชิก", "สั่งซื้อ" — ถูกเรียก<em>โดย</em> controller, CLI, test</span></dd></div>
+        <div class="ci"><dt><span lang="en">Driven port (outbound)</span><span lang="th">Driven port (ขาออก)</span></dt><dd><span lang="en">What the core <b>needs</b> from the world: "save a customer", "send an email". The core <em>calls</em> it; infra implements it.</span><span lang="th">สิ่งที่ core <b>ต้องการ</b> จากโลกภายนอก: "บันทึกลูกค้า", "ส่งอีเมล" — core เป็นคน<em>เรียก</em>, infra เป็นคน implement</span></dd></div>
+        <div class="ci"><dt>Adapter</dt><dd><span lang="en">The concrete tech that <b>fulfils a port</b>: a Micronaut Data repository, an HTTP controller, an SMTP client. Swappable without touching the core.</span><span lang="th">เทคโนโลยีจริงที่ <b>ทำตาม port</b>: Micronaut Data repository, HTTP controller, SMTP client — สลับได้โดยไม่แตะ core</span></dd></div>
+      </dl>
+    </div>
+    <div class="concept-col clean">
+      <h3>★ <span lang="en">The one rule + how to read a port</span><span lang="th">กฎข้อเดียว + วิธีอ่าน port</span></h3>
+      <dl class="concept-list">
+        <div class="ci"><dt>★ <span lang="en">The Dependency Rule</span><span lang="th">กฎ Dependency</span></dt><dd><span lang="en">Source-code arrows point <b>inward</b>. Adapters know the core; the core never imports an adapter. Check it by reading imports: a file in the core must not <code>import</code> anything from <code>infra/</code>.</span><span lang="th">ลูกศรของ source code ชี้ <b>เข้าใน</b> — adapter รู้จัก core แต่ core ไม่เคย import adapter ตรวจง่ายๆ จาก import: ไฟล์ใน core ต้องไม่ <code>import</code> อะไรจาก <code>infra/</code></span></dd></div>
+        <div class="ci"><dt><span lang="en">Driving vs Driven — a trick</span><span lang="th">แยก Driving/Driven — เคล็ดลับ</span></dt><dd><span lang="en">Ask "who initiates the call?" If the <b>outside</b> calls in → driving. If the <b>core</b> calls out → driven. Customers tap a button (driving); the core then asks the DB to save (driven).</span><span lang="th">ถามว่า "ใครเป็นคนเริ่มเรียก?" ถ้า <b>ภายนอก</b> เรียกเข้า → driving ถ้า <b>core</b> เรียกออก → driven ลูกค้ากดปุ่ม (driving) แล้ว core ค่อยสั่ง DB ให้ save (driven)</span></dd></div>
+        <div class="ci"><dt><span lang="en">Who implements what</span><span lang="th">ใคร implement อะไร</span></dt><dd><span lang="en">A <b>use case implements a driving port</b>. An <b>adapter implements a driven port</b>. Both are wired together at one place — the composition root.</span><span lang="th"><b>use case ทำ driving port</b> ส่วน <b>adapter ทำ driven port</b> แล้วทั้งคู่ถูกประกอบที่จุดเดียว — composition root</span></dd></div>
+        <div class="ci"><dt><span lang="en">Why it pays off</span><span lang="th">ทำไมถึงคุ้ม</span></dt><dd><span lang="en">Test the core with fake adapters (fast). Change DB/cache/email by writing a new adapter (safe). Add a new entry point by writing a new driving adapter (cheap).</span><span lang="th">เทส core ด้วย adapter ปลอม (เร็ว) เปลี่ยน DB/cache/email ด้วยการเขียน adapter ใหม่ (ปลอดภัย) เพิ่มทางเข้าใหม่ด้วย driving adapter ใหม่ (ถูก)</span></dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE SYSTEM ============ -->
+<section class="section narrow" id="system">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">The system we build</span><span lang="th">ระบบที่เราจะสร้าง</span></span>
+    <h2><span lang="en">1M customers, 1K products — why scale shapes the edges</span><span lang="th">ลูกค้า 1M, สินค้า 1K — ทำไม scale กำหนดที่ "ขอบ"</span></h2>
+  </div>
+  <div class="pillars reveal">
+    <article class="pillar"><div class="pillar-ico">👤</div><h3><span lang="en">Customers — 1,000,000</span><span lang="th">ลูกค้า — 1,000,000</span></h3><p><span lang="en">Write- and auth-heavy, must scale out. The <code>CustomerRepository</code> port lets you start on one Postgres and move to a sharded store later — core untouched.</span><span lang="th">หนักด้าน write และ auth ต้อง scale out, port <code>CustomerRepository</code> ทำให้เริ่มที่ Postgres เดียวแล้วย้ายไป store แบบ shard ทีหลังได้ — core ไม่ต้องแตะ</span></p></article>
+    <article class="pillar"><div class="pillar-ico">📦</div><h3><span lang="en">Products — 1,000</span><span lang="th">สินค้า — 1,000</span></h3><p><span lang="en">Tiny and read-heavy. The whole catalog fits in RAM, so a <em>cached</em> adapter behind the <code>ProductCatalog</code> port is a no-brainer — same port, different adapter.</span><span lang="th">เล็กและหนักด้าน read ทั้ง catalog ใส่ใน RAM ได้ ดังนั้น adapter แบบ <em>cache</em> หลัง port <code>ProductCatalog</code> คือคำตอบ — port เดิม คนละ adapter</span></p></article>
+    <article class="pillar"><div class="pillar-ico">🗂️</div><h3><span lang="en">Categories — 100</span><span lang="th">หมวดหมู่ — 100</span></h3><p><span lang="en">Practically static. Group products in memory; refresh on a timer. The core's use cases never learn whether data came from a DB or a cache.</span><span lang="th">แทบไม่เปลี่ยน จัดกลุ่มสินค้าในหน่วยความจำ แล้ว refresh ตามเวลา use case ใน core ไม่มีวันรู้ว่าข้อมูลมาจาก DB หรือ cache</span></p></article>
+  </div>
+  <div class="callout info reveal">
+    <span class="ttl">🧭 <span lang="en">The lesson</span><span lang="th">บทเรียน</span></span>
+    <span lang="en">Scale decisions (shard the customers, cache the catalog) are <b>infrastructure</b> decisions. In Hexagonal they live entirely in adapters — so the rules of "register a customer" and "place an order" stay identical whether you have 1K customers or 100M.</span>
+    <span lang="th">การตัดสินใจเรื่อง scale (shard ลูกค้า, cache catalog) คือการตัดสินใจระดับ <b>infrastructure</b> ใน Hexagonal มันอยู่ใน adapter ทั้งหมด — กฎของ "สมัครสมาชิก" และ "สั่งซื้อ" จึงเหมือนเดิมไม่ว่าจะมีลูกค้า 1K หรือ 100M</span>
+  </div>
+</section>
+
+<!-- ============ TUTORIAL ============ -->
+<section class="section narrow" id="build">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Step by step</span><span lang="th">ทีละขั้น</span></span>
+    <h2><span lang="en">Build "Register a customer" end-to-end</span><span lang="th">สร้าง "สมัครสมาชิก" ตั้งแต่ต้นจนจบ</span></h2>
+    <p class="section-desc"><span lang="en">We'll go from the inside out: domain → ports → use case → adapters → wiring → test. Build order matters — always start at the core.</span><span lang="th">เราจะไล่จากในออกนอก: domain → ports → use case → adapters → ประกอบร่าง → test ลำดับสำคัญ — เริ่มที่ core เสมอ</span></p>
+  </div>
+
+  <div class="reveal">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3><span lang="en">The domain — pure Kotlin</span><span lang="th">domain — Kotlin ล้วน</span></h3>
+        <p><span lang="en">Model the thing and its always-true rules. No annotations, no framework. The <code>init</code> block guards an invariant: an email must look like an email.</span><span lang="th">จำลองตัว entity และกฎที่จริงเสมอ ไม่มี annotation ไม่มี framework บล็อก <code>init</code> ป้องกัน invariant: อีเมลต้องเป็นอีเมล</span></p>
+        <div class="code-card"><div class="code-head">domain/Customer.kt</div><div class="code-block code-host" data-src="s1" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s1">
+// Pure domain — no Micronaut, no DB. This is the innermost layer.
+@JvmInline value class CustomerId(val value: String)
+
+data class Customer(
+    val id: CustomerId,
+    val email: String,
+    val name: String,
+) {
+    init {
+        require(email.contains("@")) { "invalid email: $email" }
+        require(name.isNotBlank()) { "name is required" }
+    }
+}
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3><span lang="en">The driven ports — what the core needs</span><span lang="th">driven ports — สิ่งที่ core ต้องการ</span></h3>
+        <p><span lang="en">Declare interfaces the core <em>owns</em>. Note the language: <code>findByEmail</code>, <code>save</code>, <code>welcome</code> — business vocabulary, not <code>INSERT</code> or <code>SMTP</code>.</span><span lang="th">ประกาศ interface ที่ core <em>เป็นเจ้าของ</em> สังเกตภาษาที่ใช้: <code>findByEmail</code>, <code>save</code>, <code>welcome</code> — เป็นคำศัพท์ธุรกิจ ไม่ใช่ <code>INSERT</code> หรือ <code>SMTP</code></span></p>
+        <div class="code-card"><div class="code-head">domain/port/CustomerRepository.kt · Notifier.kt</div><div class="code-block code-host" data-src="s2" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s2">
+// DRIVEN ports: the core calls outward through these.
+interface CustomerRepository {
+    fun findByEmail(email: String): Customer?
+    fun save(customer: Customer)
+}
+
+interface Notifier {
+    fun welcome(customer: Customer)
+}
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3><span lang="en">The use case — the business rule</span><span lang="th">use case — กฎธุรกิจ</span></h3>
+        <p><span lang="en">Still pure Kotlin. It depends only on the two ports (interfaces), so it has no idea a database or an email server exists.</span><span lang="th">ยังเป็น Kotlin ล้วน พึ่งแค่ 2 port (interface) จึงไม่รู้เลยว่ามีฐานข้อมูลหรือ mail server อยู่</span></p>
+        <div class="code-card"><div class="code-head">application/RegisterCustomer.kt</div><div class="code-block code-host" data-src="s3" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s3">
+data class RegisterCommand(val id: String, val email: String, val name: String)
+
+// The use case. No @Singleton here — it stays framework-free (see step 5).
+class RegisterCustomer(
+    private val customers: CustomerRepository,   // driven port
+    private val notifier: Notifier,              // driven port
+) {
+    fun handle(command: RegisterCommand): Customer {
+        require(customers.findByEmail(command.email) == null) {
+            "email already registered"
+        }
+        val customer = Customer(CustomerId(command.id), command.email, command.name)
+        customers.save(customer)        // talks to a port, not a DB
+        notifier.welcome(customer)      // talks to a port, not SMTP
+        return customer
+    }
+}
+        </script>
+        <div class="callout good">
+          <span class="ttl">💡 <span lang="en">This is the win</span><span lang="th">นี่คือจุดที่ได้</span></span>
+          <span lang="en">Re-read <code>RegisterCustomer</code>: it's the same five lines of rule whether the data sits in Postgres, a shard, or a test list. That stability is the whole point.</span>
+          <span lang="th">ลองอ่าน <code>RegisterCustomer</code> อีกครั้ง: กฎ 5 บรรทัดนี้เหมือนเดิมไม่ว่าข้อมูลจะอยู่ใน Postgres, shard หรือ list ในเทส ความเสถียรนี้แหละคือหัวใจ</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3><span lang="en">The driven adapters — real tech</span><span lang="th">driven adapters — เทคโนโลยีจริง</span></h3>
+        <p><span lang="en">Now we touch Micronaut. A Micronaut Data repository does the SQL; our adapter implements the port and <b>maps the DB row to the domain</b> (never leak the row past the boundary).</span><span lang="th">ตอนนี้ค่อยแตะ Micronaut, Micronaut Data repository ทำ SQL ให้ ส่วน adapter ของเรา implement port และ <b>แปลง row จาก DB เป็น domain</b> (อย่าให้ row หลุดข้ามขอบ)</span></p>
+        <div class="code-card"><div class="code-head">infra/persistence/JdbcCustomerRepository.kt</div><div class="code-block code-host" data-src="s4" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s4">
+// DB shape — lives OUTSIDE the core, in infra.
+@MappedEntity("customers")
+data class CustomerRow(@field:Id val id: String, val email: String, val name: String)
+
+// Micronaut Data writes the SQL for us.
+@JdbcRepository(dialect = Dialect.POSTGRES)
+interface CustomerData : CrudRepository<CustomerRow, String> {
+    fun findByEmail(email: String): CustomerRow?
+}
+
+// The ADAPTER: implements the port, maps row <-> domain.
+@Singleton
+class JdbcCustomerRepository(private val data: CustomerData) : CustomerRepository {
+    override fun findByEmail(email: String): Customer? =
+        data.findByEmail(email)?.let { Customer(CustomerId(it.id), it.email, it.name) }
+
+    override fun save(customer: Customer) {
+        data.save(CustomerRow(customer.id.value, customer.email, customer.name))
+    }
+}
+        </script>
+        <div class="code-card"><div class="code-head">infra/email/EmailNotifier.kt</div><div class="code-block code-host" data-src="s4b" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s4b">
+@Singleton
+class EmailNotifier(private val mail: MailClient) : Notifier {
+    override fun welcome(customer: Customer) {
+        mail.send(to = customer.email, subject = "Welcome!", body = "Hi ${customer.name}")
+    }
+}
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3><span lang="en">The composition root — wiring</span><span lang="th">composition root — ประกอบร่าง</span></h3>
+        <p><span lang="en">One place builds the pure use case from its adapters. A <code>@Factory</code> keeps <code>RegisterCustomer</code> annotation-free while still letting Micronaut inject the right beans.</span><span lang="th">จุดเดียวที่ประกอบ use case บริสุทธิ์จาก adapter ของมัน ใช้ <code>@Factory</code> เพื่อให้ <code>RegisterCustomer</code> ไม่มี annotation แต่ยังให้ Micronaut inject bean ที่ถูกต้องได้</span></p>
+        <div class="code-card"><div class="code-head">infra/config/UseCaseFactory.kt</div><div class="code-block code-host" data-src="s5" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s5">
+@Factory
+class UseCaseFactory {
+    // Micronaut injects JdbcCustomerRepository + EmailNotifier (the only beans
+    // implementing those ports) and hands us a framework-free use case.
+    @Singleton
+    fun registerCustomer(
+        customers: CustomerRepository,
+        notifier: Notifier,
+    ): RegisterCustomer = RegisterCustomer(customers, notifier)
+}
+        </script>
+        <div class="callout info">
+          <span class="ttl">🔀 <span lang="en">Two valid styles</span><span lang="th">ทำได้ 2 สไตล์</span></span>
+          <span lang="en"><b>Purist (shown):</b> a <code>@Factory</code> builds the use case, core has zero annotations. <b>Pragmatic:</b> put <code>@Singleton</code> directly on <code>RegisterCustomer</code> — less code, but the core now imports <code>jakarta.inject</code>. Pick one per team and be consistent.</span>
+          <span lang="th"><b>แบบบริสุทธิ์ (ที่โชว์):</b> ใช้ <code>@Factory</code> สร้าง use case, core ไม่มี annotation เลย <b>แบบ pragmatic:</b> ใส่ <code>@Singleton</code> ที่ <code>RegisterCustomer</code> ตรงๆ — โค้ดน้อยกว่า แต่ core จะ import <code>jakarta.inject</code> เลือกสไตล์เดียวต่อทีมแล้วทำให้สม่ำเสมอ</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h3><span lang="en">The driving adapter — the controller</span><span lang="th">driving adapter — controller</span></h3>
+        <p><span lang="en">The web is just one way in. The controller translates HTTP → a command, calls the use case, and translates the result → a view. No business rule lives here.</span><span lang="th">เว็บเป็นแค่ทางเข้าทางหนึ่ง controller แปลง HTTP → command, เรียก use case, แล้วแปลงผลลัพธ์ → view ไม่มีกฎธุรกิจอยู่ตรงนี้</span></p>
+        <div class="code-card"><div class="code-head">infra/web/CustomerController.kt</div><div class="code-block code-host" data-src="s6" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s6">
+@Controller("/customers")
+class CustomerController(private val registerCustomer: RegisterCustomer) {
+
+    @Post
+    fun register(@Body req: RegisterRequest): HttpResponse<CustomerView> {
+        val c = registerCustomer.handle(RegisterCommand(req.id, req.email, req.name))
+        return HttpResponse.created(CustomerView(c.id.value, c.email, c.name))
+    }
+}
+
+@Introspected data class RegisterRequest(val id: String, val email: String, val name: String)
+@Introspected data class CustomerView(val id: String, val email: String, val name: String)
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h3><span lang="en">The test — no DB, no web</span><span lang="th">test — ไม่ต่อ DB ไม่ต่อเว็บ</span></h3>
+        <p><span lang="en">Because the core depends on ports, you test it with tiny in-memory fakes. Milliseconds, no Micronaut context, no Docker.</span><span lang="th">เพราะ core พึ่ง port จึงเทสด้วย fake แบบ in-memory เล็กๆ ได้ เร็วระดับมิลลิวินาที ไม่ต้องมี Micronaut context ไม่ต้อง Docker</span></p>
+        <div class="code-card"><div class="code-head">test/RegisterCustomerTest.kt</div><div class="code-block code-host" data-src="s7" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s7">
+// Fakes — a few lines each, no framework.
+class InMemoryCustomers : CustomerRepository {
+    val saved = mutableListOf<Customer>()
+    override fun findByEmail(email: String) = saved.find { it.email == email }
+    override fun save(customer: Customer) { saved += customer }
+}
+class RecordingNotifier : Notifier {
+    var welcomed: Customer? = null
+    override fun welcome(customer: Customer) { welcomed = customer }
+}
+
+class RegisterCustomerTest {
+    @Test
+    fun `registers a new customer and welcomes them`() {
+        val customers = InMemoryCustomers()
+        val notifier = RecordingNotifier()
+        val useCase = RegisterCustomer(customers, notifier)
+
+        val c = useCase.handle(RegisterCommand("c1", "bird@shop.com", "Bird"))
+
+        assertEquals(1, customers.saved.size)
+        assertEquals(c, notifier.welcomed)
+    }
+
+    @Test
+    fun `rejects a duplicate email`() {
+        val customers = InMemoryCustomers().apply {
+            save(Customer(CustomerId("c0"), "bird@shop.com", "Bird"))
+        }
+        val useCase = RegisterCustomer(customers, RecordingNotifier())
+
+        assertThrows<IllegalArgumentException> {
+            useCase.handle(RegisterCommand("c1", "bird@shop.com", "Bird"))
+        }
+    }
+}
+        </script>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ONE PORT MANY ADAPTERS ============ -->
+<section class="section narrow" id="catalog">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">The payoff</span><span lang="th">ผลตอบแทน</span></span>
+    <h2><span lang="en">One port, many adapters — cache the catalog</span><span lang="th">หนึ่ง port หลาย adapter — cache ทั้ง catalog</span></h2>
+    <p class="section-desc"><span lang="en">With only 1,000 products and 100 categories, the whole catalog fits in memory. Watch a port get a second adapter — and the core not move.</span><span lang="th">ด้วยสินค้าเพียง 1,000 และ 100 หมวดหมู่ ทั้ง catalog ใส่ในหน่วยความจำได้ ดูว่า port ได้ adapter ตัวที่สอง — โดย core ไม่ขยับ</span></p>
+  </div>
+  <div class="reveal">
+    <div class="code-card core-card"><div class="code-head">🔒 <span lang="en">the port (the core depends on this)</span><span lang="th">port (core พึ่งอันนี้)</span></div><div class="code-block code-host" data-src="c1" data-lang="kotlin"></div></div>
+    <script type="text/plain" data-src-for="c1">
+interface ProductCatalog {
+    fun byCategory(category: CategoryId): List<Product>
+    fun byId(id: ProductId): Product?
+}
+    </script>
+    <div class="code-grid">
+      <div class="code-card adapter-card"><div class="code-head">🐘 <span lang="en">adapter A — Postgres</span><span lang="th">adapter A — Postgres</span></div><div class="code-block code-host" data-src="c2" data-lang="kotlin"></div></div>
+      <div class="code-card adapter-card"><div class="code-head">⚡ <span lang="en">adapter B — in-memory cache</span><span lang="th">adapter B — cache ในหน่วยความจำ</span></div><div class="code-block code-host" data-src="c3" data-lang="kotlin"></div></div>
+    </div>
+    <script type="text/plain" data-src-for="c2">
+@Singleton
+@Named("db")
+class DbProductCatalog(private val data: ProductData) : ProductCatalog {
+    override fun byCategory(category: CategoryId) =
+        data.findByCategoryId(category.value).map { it.toDomain() }
+    override fun byId(id: ProductId) =
+        data.findById(id.value).orElse(null)?.toDomain()
+}
+    </script>
+    <script type="text/plain" data-src-for="c3">
+// Only ~1K products / 100 categories — keep them all in RAM.
+// @Primary: the rest of the app gets THIS adapter by default.
+@Singleton
+@Primary
+class CachedProductCatalog(
+    @Named("db") private val source: ProductCatalog,   // wraps adapter A
+) : ProductCatalog {
+    @Volatile private var byCat: Map<CategoryId, List<Product>> = emptyMap()
+    @Volatile private var byId: Map<ProductId, Product> = emptyMap()
+
+    @PostConstruct fun warm() = reload()
+
+    @Scheduled(fixedDelay = "5m") fun reload() {
+        val all = source.byCategory(CategoryId.ALL)
+        byId = all.associateBy { it.id }
+        byCat = all.groupBy { it.categoryId }
+    }
+
+    override fun byCategory(category: CategoryId) = byCat[category].orEmpty()
+    override fun byId(id: ProductId) = byId[id]
+}
+    </script>
+    <div class="callout good">
+      <span class="ttl">✅ <span lang="en">What changed in the core?</span><span lang="th">core เปลี่ยนอะไรบ้าง?</span></span>
+      <span lang="en"><b>Nothing.</b> Every use case still depends on <code>ProductCatalog</code>. We added an adapter and flipped one <code>@Primary</code>. Decisions like "cache it" or "shard it" never reach the business rules.</span>
+      <span lang="th"><b>ไม่มีอะไรเลย</b> ทุก use case ยังพึ่ง <code>ProductCatalog</code> เหมือนเดิม เราแค่เพิ่ม adapter และสลับ <code>@Primary</code> หนึ่งจุด การตัดสินใจอย่าง "cache" หรือ "shard" ไม่มีวันไปถึงกฎธุรกิจ</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRACTICE ============ -->
+<section class="section narrow" id="practice">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Day-to-day</span><span lang="th">ใช้งานจริง</span></span>
+    <h2><span lang="en">Practices &amp; naming — and the traps</span><span lang="th">วิธีปฏิบัติ &amp; การตั้งชื่อ — และกับดัก</span></h2>
+  </div>
+  <div class="adopt-grid reveal">
+    <div class="adopt-card yes">
+      <h3>✅ <span lang="en">Do</span><span lang="th">ควรทำ</span></h3>
+      <ul class="feature-list">
+        <li><span class="dot a"></span><span lang="en">Name ports in <b>business language</b>: <code>CustomerRepository</code>, <code>Notifier</code> — not <code>PostgresDao</code>.</span><span lang="th">ตั้งชื่อ port เป็น <b>ภาษาธุรกิจ</b>: <code>CustomerRepository</code>, <code>Notifier</code> — ไม่ใช่ <code>PostgresDao</code></span></li>
+        <li><span class="dot a"></span><span lang="en">Keep the port <b>in the core</b>, the adapter in <code>infra/</code>.</span><span lang="th">เก็บ port ไว้ <b>ใน core</b> ส่วน adapter อยู่ใน <code>infra/</code></span></li>
+        <li><span class="dot a"></span><span lang="en">Map DB rows / DTOs to domain <b>inside the adapter</b>.</span><span lang="th">แปลง row/DTO เป็น domain <b>ภายใน adapter</b></span></li>
+        <li><span class="dot a"></span><span lang="en">Define a port only when you have a <b>real reason</b> to swap or fake it.</span><span lang="th">สร้าง port เมื่อมี <b>เหตุผลจริง</b> ที่จะสลับหรือทำ fake เท่านั้น</span></li>
+      </ul>
+    </div>
+    <div class="adopt-card no">
+      <h3>🚫 <span lang="en">Don't (junior traps)</span><span lang="th">อย่าทำ (กับดัก junior)</span></h3>
+      <ul class="feature-list">
+        <li><span class="dot b"></span><span lang="en">Don't <code>import</code> anything from <code>infra/</code> inside the core.</span><span lang="th">อย่า <code>import</code> อะไรจาก <code>infra/</code> เข้าไปใน core</span></li>
+        <li><span class="dot b"></span><span lang="en">Don't return a <code>CustomerRow</code> / JPA entity from a port — return domain.</span><span lang="th">อย่าคืน <code>CustomerRow</code> / JPA entity จาก port — ให้คืน domain</span></li>
+        <li><span class="dot b"></span><span lang="en">Don't make a port that just mirrors one DB table (<code>save/find</code> 1:1) with no domain meaning.</span><span lang="th">อย่าสร้าง port ที่แค่สะท้อนตาราง DB หนึ่งตาราง (<code>save/find</code> 1:1) โดยไม่มีความหมายเชิง domain</span></li>
+        <li><span class="dot b"></span><span lang="en">Don't put <code>if</code>-business-rules inside a controller or adapter.</span><span lang="th">อย่าเอา <code>if</code> ที่เป็นกฎธุรกิจไปไว้ใน controller หรือ adapter</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout info reveal">
+    <span class="ttl">📁 <span lang="en">A naming convention that scales</span><span lang="th">แนวตั้งชื่อที่ใช้ได้ระยะยาว</span></span>
+    <span lang="en"><code>domain/</code> (entities) · <code>domain/port/</code> (interfaces) · <code>application/</code> (use cases) · <code>infra/web</code>, <code>infra/persistence</code>, <code>infra/email</code> (adapters) · <code>infra/config</code> (factories). One folder = one job.</span>
+    <span lang="th"><code>domain/</code> (entity) · <code>domain/port/</code> (interface) · <code>application/</code> (use case) · <code>infra/web</code>, <code>infra/persistence</code>, <code>infra/email</code> (adapter) · <code>infra/config</code> (factory) — หนึ่งโฟลเดอร์ = หนึ่งหน้าที่</span>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY + FAQ + CHECKLIST ============ -->
+<section class="section narrow" id="faq">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Reference</span><span lang="th">อ้างอิง</span></span>
+    <h2><span lang="en">Glossary, FAQ &amp; a first-day checklist</span><span lang="th">Glossary, FAQ &amp; checklist วันแรก</span></h2>
+  </div>
+
+  <dl class="glossary reveal">
+    <div class="g"><dt>Port</dt><dd><span lang="en">An interface owned by the core; its boundary contract.</span><span lang="th">interface ที่ core เป็นเจ้าของ — สัญญาที่ขอบของมัน</span></dd></div>
+    <div class="g"><dt>Adapter</dt><dd><span lang="en">A concrete implementation of a port using real tech.</span><span lang="th">ตัว implement port ด้วยเทคโนโลยีจริง</span></dd></div>
+    <div class="g"><dt>Driving / Primary</dt><dd><span lang="en">Initiated from outside in (controller, CLI, test).</span><span lang="th">เริ่มจากภายนอกเข้ามา (controller, CLI, test)</span></dd></div>
+    <div class="g"><dt>Driven / Secondary</dt><dd><span lang="en">Initiated by the core calling out (DB, email, queue).</span><span lang="th">เริ่มจาก core เรียกออกไป (DB, email, queue)</span></dd></div>
+    <div class="g"><dt>Use case</dt><dd><span lang="en">One application scenario; orchestrates the domain.</span><span lang="th">หนึ่ง scenario ของแอป — orchestrate domain</span></dd></div>
+    <div class="g"><dt>Composition root</dt><dd><span lang="en">The single place that wires adapters into the core (a <code>@Factory</code>).</span><span lang="th">จุดเดียวที่ประกอบ adapter เข้า core (เช่น <code>@Factory</code>)</span></dd></div>
+  </dl>
+
+  <div class="faq reveal" style="margin-top:24px">
+    <details><summary><span lang="en">Isn't a port just an interface? Why the fancy name?</span><span lang="th">port ก็แค่ interface ไม่ใช่เหรอ ทำไมต้องตั้งชื่อหรู?</span></summary>
+      <p><span lang="en">Yes, technically it's a Kotlin <code>interface</code>. "Port" tells you <em>where</em> it lives (the core's boundary) and <em>who</em> owns it (the core, not the adapter). The name encodes a rule, not a new language feature.</span><span lang="th">ใช่ ทางเทคนิคมันคือ <code>interface</code> ของ Kotlin คำว่า "port" บอกว่ามันอยู่ <em>ตรงไหน</em> (ขอบของ core) และ <em>ใคร</em> เป็นเจ้าของ (core ไม่ใช่ adapter) ชื่อนี้เข้ารหัสกฎไว้ ไม่ใช่ฟีเจอร์ใหม่ของภาษา</span></p>
+    </details>
+    <details><summary><span lang="en">Do I need a port for everything?</span><span lang="th">ต้องมี port ให้ทุกอย่างไหม?</span></summary>
+      <p><span lang="en">No. Create a port when you'll <b>swap</b> the implementation, <b>fake</b> it in tests, or cross a real boundary (DB, network, clock). A pure helper function needs no port.</span><span lang="th">ไม่ สร้าง port เมื่อจะ <b>สลับ</b> implementation, <b>ทำ fake</b> ในเทส หรือข้ามขอบจริง (DB, network, clock) ฟังก์ชัน helper ล้วนๆ ไม่ต้องมี port</span></p>
+    </details>
+    <details><summary><span lang="en">Where does validation go — controller or core?</span><span lang="th">validation อยู่ตรงไหน — controller หรือ core?</span></summary>
+      <p><span lang="en">Shape checks (is this JSON well-formed?) can sit at the controller. <b>Business rules</b> (email must be unique, order total ≥ 0) belong in the domain/use case, where they're tested without a web layer.</span><span lang="th">การตรวจรูปแบบ (JSON ถูกโครงสร้างไหม) อยู่ที่ controller ได้ ส่วน <b>กฎธุรกิจ</b> (อีเมลห้ามซ้ำ, ยอดรวม ≥ 0) ต้องอยู่ใน domain/use case ที่เทสได้โดยไม่ต้องมีชั้นเว็บ</span></p>
+    </details>
+    <details><summary><span lang="en">Is this the same as Clean Architecture?</span><span lang="th">อันนี้เหมือน Clean Architecture ไหม?</span></summary>
+      <p><span lang="en">Same goal, different emphasis. Hexagonal focuses on the in/out boundary (ports &amp; adapters); Clean adds named concentric layers. See the <a href="index.html#versus">comparison</a>.</span><span lang="th">เป้าหมายเดียวกัน เน้นต่างกัน Hexagonal เน้นขอบ in/out (port &amp; adapter) ส่วน Clean เพิ่มชั้นซ้อนที่มีชื่อชัด ดู <a href="index.html#versus">ตารางเทียบ</a></span></p>
+    </details>
+  </div>
+
+  <div class="callout good reveal" style="margin-top:26px">
+    <span class="ttl">🚀 <span lang="en">First-day checklist</span><span lang="th">checklist วันแรก</span></span>
+    <ul class="checklist">
+      <li><span lang="en">Find the <code>domain/</code> folder — read the entities first.</span><span lang="th">หาโฟลเดอร์ <code>domain/</code> — อ่าน entity ก่อน</span></li>
+      <li><span lang="en">List the ports in <code>domain/port/</code> — that's the core's whole contract with the world.</span><span lang="th">ไล่ดู port ใน <code>domain/port/</code> — นั่นคือสัญญาทั้งหมดของ core กับโลกภายนอก</span></li>
+      <li><span lang="en">For each port, find its adapter(s) in <code>infra/</code>.</span><span lang="th">แต่ละ port หา adapter ของมันใน <code>infra/</code></span></li>
+      <li><span lang="en">Open the composition root (<code>@Factory</code>) to see how it's all wired.</span><span lang="th">เปิด composition root (<code>@Factory</code>) เพื่อดูว่าประกอบกันยังไง</span></li>
+      <li><span lang="en">Write your first feature core-first: domain → port → use case → adapter → test.</span><span lang="th">เขียนฟีเจอร์แรกแบบ core-first: domain → port → use case → adapter → test</span></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <img src="logo.jpeg" alt="Krungthai" class="footer-logo" />
+  <p><span lang="en">Made by <b>Dekdee</b> for Bird · KTB / KM</span><span lang="th">สร้างโดย <b>เด็กดี</b> สำหรับคุณเบิร์ด · KTB / KM</span></p>
+  <p class="muted"><a href="index.html" class="back-link">← <span lang="en">Back to the Hexagonal vs Clean overview</span><span lang="th">กลับไปหน้าเทียบ Hexagonal vs Clean</span></a></p>
+</footer>
+
+<script type="module">
+  import { createHighlighter } from 'https://esm.sh/shiki@4.2.0';
+  (async () => {
+    try {
+      const hl = await createHighlighter({ themes: ['github-dark', 'github-light'], langs: ['kotlin'] });
+      window.codeHL = (code, lang) => hl.codeToHtml(code, { lang, themes: { dark: 'github-dark', light: 'github-light' }, defaultColor: 'dark' });
+      document.dispatchEvent(new CustomEvent('shiki-ready'));
+    } catch (e) { console.warn('Shiki failed to load — plain code fallback', e); }
+  })();
+</script>
+<script src="script.js"></script>
+</body>
+</html>
