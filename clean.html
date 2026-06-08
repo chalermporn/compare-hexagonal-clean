@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clean Architecture — deep dive for developers</title>
+<meta name="description" content="A hands-on deep dive into Clean Architecture (4 concentric layers) in Micronaut + Kotlin, built around a 1M-user e-commerce system — entities, use cases, interactors, boundaries, gateways, a full step-by-step tutorial, practices, glossary and FAQ. เจาะลึก Clean จน junior ลงมือทำงานได้" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* This page is the "Clean" sibling — lean on accent-b (blue/midnight) where
+     hexagonal.html leans on accent-a (cyan). Scoped, no edits to styles.css. */
+  .step-num { background: linear-gradient(135deg, var(--accent-b), var(--accent-b-2)); }
+  .section-head .kicker { color: var(--accent-b); border-color: var(--accent-b-glow); }
+  .hero .eyebrow { color: var(--accent-b); }
+  .layer-rings { display:flex; flex-direction:column; gap:0; align-items:stretch; max-width:560px; margin:0 auto; }
+  .layer-ring { border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin:6px 0; position:relative; background:var(--surface); }
+  .layer-ring .lr-no { font-family:var(--font-head); font-weight:700; color:var(--accent-b); margin-right:8px; }
+  .layer-ring .lr-name { font-family:var(--font-head); font-weight:600; }
+  .layer-ring .lr-desc { display:block; color:var(--text-dim); font-size:.9rem; margin-top:4px; line-height:1.55; }
+  .layer-ring.l1 { margin-left:0;  margin-right:0;  border-color:var(--accent-b-glow); }
+  .layer-ring.l2 { margin-left:22px; margin-right:22px; }
+  .layer-ring.l3 { margin-left:44px; margin-right:44px; }
+  .layer-ring.l4 { margin-left:66px; margin-right:66px; opacity:.92; }
+  .layer-axis { text-align:center; color:var(--text-mute); font-size:.82rem; margin-top:10px; letter-spacing:.5px; }
+</style>
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('kp-theme');
+      var sysLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      var theme = saved || (sysLight ? 'light' : 'dark');
+      if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      var savedL = localStorage.getItem('kp-lang');
+      var sysTh = (navigator.language || '').toLowerCase().indexOf('th') === 0;
+      var lang = savedL || (sysTh ? 'th' : 'en');
+      document.documentElement.setAttribute('data-lang', lang);
+      document.documentElement.setAttribute('lang', lang);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="bg-orbs" aria-hidden="true"><span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span></div>
+
+<!-- ============ NAV ============ -->
+<nav class="nav" id="nav">
+  <a href="index.html" class="nav-brand">
+    <img src="logo.jpeg" alt="Krungthai" class="brand-logo" />
+    <span class="brand-sep" aria-hidden="true"></span>
+    <span>Arch<span class="accent">Compare</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="back-link">← <span lang="en">Overview</span><span lang="th">กลับหน้าหลัก</span></a>
+    <a href="#why"><span lang="en">Why</span><span lang="th">ทำไม</span></a>
+    <a href="#concepts"><span lang="en">Concepts</span><span lang="th">แนวคิด</span></a>
+    <a href="#build"><span lang="en">Build it</span><span lang="th">ลงมือสร้าง</span></a>
+    <a href="#practice"><span lang="en">Practice</span><span lang="th">วิธีปฏิบัติ</span></a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-actions">
+    <button class="icon-btn lang-btn" id="langBtn" title="ไทย / English" aria-label="Toggle language"><span lang="en">TH</span><span lang="th">EN</span></button>
+    <button class="icon-btn pdf-btn" id="pdfBtn" title="Export as PDF" aria-label="Export as PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14"/></svg>
+      <span class="pdf-label">PDF</span>
+    </button>
+    <button class="icon-btn" id="themeBtn" title="Toggle light/dark" aria-label="Toggle theme" aria-pressed="false">
+      <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="hero">
+  <div class="hero-inner">
+    <p class="eyebrow reveal"><span lang="en">Deep dive · Micronaut + Kotlin</span><span lang="th">เจาะลึก · Micronaut + Kotlin</span></p>
+    <h1 class="hero-title reveal"><span class="grad-b">Clean</span> <span lang="en">hands-on</span><span lang="th">ลงมือจริง</span></h1>
+    <p class="hero-sub reveal">
+      <span lang="en">Everything a junior dev needs to <strong>actually build</strong> with Clean Architecture — the why, the four
+      concentric layers, boundaries &amp; interactors, a full step-by-step tutorial, real practices, and a glossary.
+      Built around one concrete system.</span>
+      <span lang="th">ทุกอย่างที่ junior dev ต้องรู้เพื่อ<strong>ลงมือสร้างจริง</strong>ด้วย Clean Architecture — ทำไมต้องมี, 4 ชั้นซ้อนเป็นวง,
+      boundary &amp; interactor, tutorial ทีละขั้นแบบเต็ม, วิธีปฏิบัติจริง และ glossary โดยอิงระบบจริงหนึ่งระบบตลอดทั้งหน้า</span>
+    </p>
+    <div class="callout info reveal" style="max-width:680px;margin:26px auto 0;text-align:left">
+      <span class="ttl">🛒 <span lang="en">Our running example</span><span lang="th">ระบบตัวอย่างที่ใช้ตลอดหน้า</span></span>
+      <span lang="en">The <b>same</b> e-commerce + membership platform as the Hexagonal page — <b>1,000,000 customers</b>, but only
+      <b>1,000 products</b> and <b>100 categories</b>. Same domain, same lopsided scale — only the structure changes,
+      so you can compare the two architectures line for line.</span>
+      <span lang="th">แพลตฟอร์ม e-commerce + ระบบสมาชิก <b>ตัวเดียวกับ</b>หน้า Hexagonal — <b>ลูกค้า 1,000,000 คน</b> แต่มี
+      <b>สินค้าเพียง 1,000 รายการ</b> และ <b>100 หมวดหมู่</b> โดเมนเดียวกัน scale ไม่สมดุลแบบเดียวกัน เปลี่ยนแค่โครงสร้าง —
+      จึงเทียบสองสถาปัตยกรรมได้ทีละบรรทัด</span>
+    </div>
+    <div class="hero-cta reveal" style="margin-top:26px">
+      <a href="#why" class="btn btn-primary"><span lang="en">Start ↓</span><span lang="th">เริ่ม ↓</span></a>
+      <a href="#build" class="btn btn-ghost"><span lang="en">Jump to the tutorial</span><span lang="th">ข้ามไป tutorial</span></a>
+      <a href="ex/clean/README.md" class="btn btn-ghost"><span lang="en">📦 Runnable project →</span><span lang="th">📦 โปรเจกต์รันได้จริง →</span></a>
+    </div>
+  </div>
+  <div class="scroll-hint"><span></span></div>
+</header>
+
+<main>
+
+<!-- ============ WHY ============ -->
+<section class="section narrow" id="why">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">The problem</span><span lang="th">ปัญหา</span></span>
+    <h2><span lang="en">Why bother with Clean Architecture?</span><span lang="th">ทำไมต้องใช้ Clean Architecture?</span></h2>
+    <p class="section-desc"><span lang="en">Start with what goes wrong when business logic and infrastructure are tangled together.</span><span lang="th">เริ่มจากสิ่งที่พังเมื่อ business logic ปนกับ infrastructure</span></p>
+  </div>
+  <div class="reveal">
+    <p class="lead"><span lang="en">Here's "register a customer" the way it's often first written — the rule, the database, and the web framework all in one class:</span><span lang="th">นี่คือ "สมัครสมาชิก" แบบที่มักเขียนกันตอนแรก — กฎธุรกิจ, ฐานข้อมูล และ web framework รวมกันอยู่ในคลาสเดียว:</span></p>
+    <div class="code-card"><div class="code-head">😵 <span lang="en">tangled — controller does everything</span><span lang="th">พันกัน — controller ทำทุกอย่าง</span></div><div class="code-block code-host" data-src="bad" data-lang="kotlin"></div></div>
+    <script type="text/plain" data-src-for="bad">
+@Controller("/customers")
+class CustomerController(private val db: JdbcOperations) {
+    @Post
+    fun register(@Body req: RegisterRequest): HttpResponse<Any> {
+        // business rule mixed with SQL, JSON and HTTP
+        val exists = db.queryForObject(
+            "SELECT count(*) FROM customers WHERE email = ?",
+            Long::class.java, req.email,
+        )
+        if (exists > 0) return HttpResponse.badRequest("email taken")
+        if (!req.email.contains("@")) return HttpResponse.badRequest("bad email")
+
+        db.execute("INSERT INTO customers(id, email, name) VALUES (?,?,?)") {
+            it.setString(1, req.id); it.setString(2, req.email); it.setString(3, req.name)
+        }
+        sendGrid.send(req.email, "Welcome!")        // and email, too
+        return HttpResponse.created(req)
+    }
+}
+    </script>
+    <div class="callout warn">
+      <span class="ttl">⚠️ <span lang="en">What hurts later</span><span lang="th">สิ่งที่จะเจ็บทีหลัง</span></span>
+      <span lang="en">To <b>unit-test the rule</b> you must boot a DB and a mail server. The same "email must be unique" rule gets copy-pasted into every entry point. There's no obvious <em>home</em> for a rule, a use case, or a piece of presentation — everything piles up in the controller and grows into a big ball of mud as the team scales.</span>
+      <span lang="th">จะ <b>unit-test กฎ</b> ต้องบูต DB และ mail server จริง กฎ "อีเมลห้ามซ้ำ" เดิมถูก copy-paste ไปทุกทางเข้า และไม่มี <em>บ้าน</em> ที่ชัดเจนให้กฎ, use case หรือส่วน presentation — ทุกอย่างกองอยู่ใน controller แล้วบวมเป็น big ball of mud เมื่อทีมโตขึ้น</span>
+    </div>
+    <div class="callout good">
+      <span class="ttl">✅ <span lang="en">The Clean Architecture idea in one line</span><span lang="th">แนวคิด Clean Architecture ในบรรทัดเดียว</span></span>
+      <span lang="en">Split the system into <b>four concentric layers</b> — <b>Entities → Use Cases → Interface Adapters → Frameworks &amp; Drivers</b> — and enforce one rule: <b>source-code dependencies point only inward</b>. Every kind of code gets a named home, and the business core never imports a framework.</span>
+      <span lang="th">แบ่งระบบเป็น <b>4 ชั้นซ้อนเป็นวง</b> — <b>Entities → Use Cases → Interface Adapters → Frameworks &amp; Drivers</b> — แล้วบังคับกฎข้อเดียว: <b>dependency ของ source code ชี้เข้าด้านในเท่านั้น</b> โค้ดทุกประเภทมีบ้านที่มีชื่อชัด และแก่นธุรกิจไม่เคย import framework</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONCEPTS ============ -->
+<section class="section narrow" id="concepts">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Mental model</span><span lang="th">โมเดลความคิด</span></span>
+    <h2><span lang="en">The four layers + the one rule</span><span lang="th">4 ชั้น + กฎข้อเดียว</span></h2>
+  </div>
+
+  <div class="reveal" style="margin-bottom:28px">
+    <div class="layer-rings">
+      <div class="layer-ring l4"><span class="lr-no">④</span><span class="lr-name">Frameworks &amp; Drivers</span><span class="lr-desc"><span lang="en">The outermost detail — DB, web framework, Docker, the <code>main</code>. Thin glue you can swap.</span><span lang="th">รายละเอียดนอกสุด — DB, web framework, Docker, <code>main</code> เป็น glue บางๆ ที่สลับได้</span></span></div>
+      <div class="layer-ring l3"><span class="lr-no">③</span><span class="lr-name">Interface Adapters</span><span class="lr-desc"><span lang="en">Controllers, presenters, gateways — reshape data between the inside and the outside.</span><span lang="th">Controller, presenter, gateway — แปลงรูปข้อมูลระหว่างชั้นในกับชั้นนอก</span></span></div>
+      <div class="layer-ring l2"><span class="lr-no">②</span><span class="lr-name">Use Cases</span><span class="lr-desc"><span lang="en">Application business rules — interactors that orchestrate entities for one scenario.</span><span lang="th">Application business rules — interactor ที่ orchestrate entity ตาม scenario เดียว</span></span></div>
+      <div class="layer-ring l1"><span class="lr-no">①</span><span class="lr-name">Entities</span><span class="lr-desc"><span lang="en">Enterprise business rules — pure Kotlin, the slowest to change, aware of nothing outside.</span><span lang="th">Enterprise business rules — Kotlin ล้วน เปลี่ยนช้าที่สุด ไม่รู้จักชั้นนอกเลย</span></span></div>
+    </div>
+    <p class="layer-axis"><span lang="en">▲ dependencies point inward — outer knows inner, never the reverse</span><span lang="th">▲ dependency ชี้เข้าใน — ชั้นนอกรู้จักชั้นใน แต่ชั้นในไม่รู้จักชั้นนอก</span></p>
+  </div>
+
+  <div class="concept-grid reveal">
+    <div class="concept-col clean">
+      <h3>◎ <span lang="en">Core vocabulary</span><span lang="th">คำศัพท์แกนหลัก</span></h3>
+      <dl class="concept-list">
+        <div class="ci"><dt><span lang="en">Entity</span><span lang="th">Entity</span></dt><dd><span lang="en">Enterprise rules + the data they protect. Plain Kotlin value objects (<code>Email</code>, <code>CustomerId</code>) that guard their own invariants. No annotations, no DB.</span><span lang="th">กฎระดับองค์กร + ข้อมูลที่มันปกป้อง เป็น value object Kotlin ล้วน (<code>Email</code>, <code>CustomerId</code>) ที่คุม invariant ของตัวเอง ไม่มี annotation ไม่มี DB</span></dd></div>
+        <div class="ci"><dt><span lang="en">Use Case / Interactor</span><span lang="th">Use Case / Interactor</span></dt><dd><span lang="en">One application scenario ("register a customer"). The <b>interactor</b> is the class that implements it; it orchestrates entities and output ports.</span><span lang="th">หนึ่ง scenario ของแอป ("สมัครสมาชิก") <b>interactor</b> คือคลาสที่ implement มัน — orchestrate entity และ output port</span></dd></div>
+        <div class="ci"><dt><span lang="en">Input boundary</span><span lang="th">Input boundary</span></dt><dd><span lang="en">An <b>interface the use-case layer exposes</b> for the outside to call (e.g. <code>RegisterCustomer</code>). Controllers depend on this, never on the interactor.</span><span lang="th"><b>interface ที่ชั้น use case เปิดให้</b> ภายนอกเรียก (เช่น <code>RegisterCustomer</code>) controller พึ่งอันนี้ ไม่พึ่ง interactor</span></dd></div>
+        <div class="ci"><dt><span lang="en">Output port / Gateway</span><span lang="th">Output port / Gateway</span></dt><dd><span lang="en">An <b>interface the use case needs</b> from the world (e.g. <code>CustomerGateway</code>, <code>Notifier</code>). The interactor calls it; an adapter implements it.</span><span lang="th"><b>interface ที่ use case ต้องการ</b> จากโลกภายนอก (เช่น <code>CustomerGateway</code>, <code>Notifier</code>) interactor เป็นคนเรียก, adapter เป็นคน implement</span></dd></div>
+        <div class="ci"><dt><span lang="en">Interface Adapter</span><span lang="th">Interface Adapter</span></dt><dd><span lang="en">Controllers, presenters and gateway implementations — they <b>map</b> between the inner models and outside shapes (JSON DTO, DB row).</span><span lang="th">Controller, presenter และตัว implement gateway — ทำหน้าที่ <b>แปลง</b> ระหว่าง model ชั้นในกับรูปข้อมูลชั้นนอก (JSON DTO, DB row)</span></dd></div>
+      </dl>
+    </div>
+    <div class="concept-col hex">
+      <h3>★ <span lang="en">The one rule + how to read a boundary</span><span lang="th">กฎข้อเดียว + วิธีอ่าน boundary</span></h3>
+      <dl class="concept-list">
+        <div class="ci"><dt>★ <span lang="en">The Dependency Rule</span><span lang="th">กฎ Dependency</span></dt><dd><span lang="en">Source-code arrows point <b>inward</b> only: <code>frameworks → adapters → usecases → entities</code>. Check it by reading imports — a file in <code>entities/</code> or <code>usecases/</code> must not <code>import</code> anything from <code>adapters/</code> or <code>frameworks/</code>.</span><span lang="th">ลูกศรของ source code ชี้ <b>เข้าใน</b> เท่านั้น: <code>frameworks → adapters → usecases → entities</code> ตรวจง่ายๆ จาก import — ไฟล์ใน <code>entities/</code> หรือ <code>usecases/</code> ต้องไม่ <code>import</code> อะไรจาก <code>adapters/</code> หรือ <code>frameworks/</code></span></dd></div>
+        <div class="ci"><dt><span lang="en">Crossing a boundary (DIP)</span><span lang="th">ข้ามเส้นชั้น (DIP)</span></dt><dd><span lang="en">When the core must drive something outward (save to a DB), it declares an interface <em>inside</em> and lets the outer layer implement it. Control flows out; the dependency still points in.</span><span lang="th">เมื่อ core ต้องสั่งงานออกนอก (เซฟลง DB) มันประกาศ interface ไว้ <em>ข้างใน</em> แล้วให้ชั้นนอก implement — control flow วิ่งออก แต่ dependency ยังชี้เข้า</span></dd></div>
+        <div class="ci"><dt><span lang="en">Data across boundaries</span><span lang="th">ข้อมูลข้ามชั้น</span></dt><dd><span lang="en">Pass plain models / DTOs across layers — <code>RegisterInput</code>, <code>RegisterOutput</code> — never hand a raw entity or DB row across. Each side stays free to change.</span><span lang="th">ส่งข้อมูลข้ามชั้นเป็น model / DTO ง่ายๆ — <code>RegisterInput</code>, <code>RegisterOutput</code> — อย่าส่ง entity หรือ DB row ดิบข้ามไป แต่ละฝั่งจึงเปลี่ยนได้อิสระ</span></dd></div>
+        <div class="ci"><dt><span lang="en">Why it pays off</span><span lang="th">ทำไมถึงคุ้ม</span></dt><dd><span lang="en">Every kind of code has one named home, so a new dev knows exactly where things live. Test the core with fake gateways (fast). Swap DB/web by writing a new adapter (safe).</span><span lang="th">โค้ดทุกประเภทมีบ้านที่มีชื่อชัด คนใหม่จึงรู้ทันทีว่าอะไรอยู่ตรงไหน เทส core ด้วย gateway ปลอม (เร็ว) เปลี่ยน DB/web ด้วยการเขียน adapter ใหม่ (ปลอดภัย)</span></dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE SYSTEM ============ -->
+<section class="section narrow" id="system">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">The system we build</span><span lang="th">ระบบที่เราจะสร้าง</span></span>
+    <h2><span lang="en">1M customers, 1K products — why scale stays in the outer layers</span><span lang="th">ลูกค้า 1M, สินค้า 1K — ทำไม scale อยู่แค่ชั้นนอก</span></h2>
+  </div>
+  <div class="pillars reveal">
+    <article class="pillar"><div class="pillar-ico">👤</div><h3><span lang="en">Customers — 1,000,000</span><span lang="th">ลูกค้า — 1,000,000</span></h3><p><span lang="en">Write- and auth-heavy, must scale out. The <code>CustomerGateway</code> output port lets you start on one Postgres and move to a sharded store later — entities and use cases untouched.</span><span lang="th">หนักด้าน write และ auth ต้อง scale out, output port <code>CustomerGateway</code> ทำให้เริ่มที่ Postgres เดียวแล้วย้ายไป store แบบ shard ทีหลังได้ — entity และ use case ไม่ต้องแตะ</span></p></article>
+    <article class="pillar"><div class="pillar-ico">📦</div><h3><span lang="en">Products — 1,000</span><span lang="th">สินค้า — 1,000</span></h3><p><span lang="en">Tiny and read-heavy. The whole catalog fits in RAM, so a <em>cached</em> gateway behind the <code>ProductGateway</code> port is a no-brainer — same port, different adapter.</span><span lang="th">เล็กและหนักด้าน read ทั้ง catalog ใส่ใน RAM ได้ ดังนั้น gateway แบบ <em>cache</em> หลัง port <code>ProductGateway</code> คือคำตอบ — port เดิม คนละ adapter</span></p></article>
+    <article class="pillar"><div class="pillar-ico">🗂️</div><h3><span lang="en">Categories — 100</span><span lang="th">หมวดหมู่ — 100</span></h3><p><span lang="en">Practically static. Group products in memory; refresh on a timer. The use cases never learn whether data came from a DB or a cache.</span><span lang="th">แทบไม่เปลี่ยน จัดกลุ่มสินค้าในหน่วยความจำ แล้ว refresh ตามเวลา use case ไม่มีวันรู้ว่าข้อมูลมาจาก DB หรือ cache</span></p></article>
+  </div>
+  <div class="callout info reveal">
+    <span class="ttl">🧭 <span lang="en">The lesson</span><span lang="th">บทเรียน</span></span>
+    <span lang="en">Scale decisions (shard the customers, cache the catalog) are <b>Frameworks &amp; Drivers / adapter</b> decisions. They live in the outer two layers — so the Entities and Use Cases of "register a customer" and "list products" stay identical whether you have 1K customers or 100M.</span>
+    <span lang="th">การตัดสินใจเรื่อง scale (shard ลูกค้า, cache catalog) คือการตัดสินใจระดับ <b>Frameworks &amp; Drivers / adapter</b> มันอยู่ใน 2 ชั้นนอก — Entities และ Use Cases ของ "สมัครสมาชิก" และ "ดูสินค้า" จึงเหมือนเดิมไม่ว่าจะมีลูกค้า 1K หรือ 100M</span>
+  </div>
+</section>
+
+<!-- ============ TUTORIAL ============ -->
+<section class="section narrow" id="build">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Step by step</span><span lang="th">ทีละขั้น</span></span>
+    <h2><span lang="en">Build "Register a customer" end-to-end</span><span lang="th">สร้าง "สมัครสมาชิก" ตั้งแต่ต้นจนจบ</span></h2>
+    <p class="section-desc"><span lang="en">We'll go from the inside out: entity → output ports → input boundary &amp; models → interactor → adapters → wiring → controller → test. Build order matters — always start at the innermost circle.</span><span lang="th">เราจะไล่จากในออกนอก: entity → output ports → input boundary &amp; models → interactor → adapters → ประกอบร่าง → controller → test ลำดับสำคัญ — เริ่มที่วงในสุดเสมอ</span></p>
+  </div>
+
+  <div class="reveal">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3><span lang="en">Entities — the innermost circle</span><span lang="th">Entities — วงในสุด</span></h3>
+        <p><span lang="en">Enterprise business rules as pure Kotlin. Value objects guard their own invariants — an <code>Email</code> simply <em>cannot</em> exist in an invalid form. No annotations, no framework.</span><span lang="th">Enterprise business rule เป็น Kotlin ล้วน value object คุม invariant ของตัวเอง — <code>Email</code> ที่ผิดรูปแบบ<em>สร้างไม่ได้</em>เลย ไม่มี annotation ไม่มี framework</span></p>
+        <div class="code-card"><div class="code-head">entities/Customer.kt</div><div class="code-block code-host" data-src="s1" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s1">
+package com.ktb.shop.entities
+
+// ① Enterprise Business Rules (Clean's innermost circle).
+// Pure Kotlin — no Micronaut, no DB, no web. Nothing here may depend on an outer layer.
+
+@JvmInline
+value class CustomerId(val value: String) {
+    init { require(value.isNotBlank()) { "customer id is required" } }
+}
+
+@JvmInline
+value class Email(val value: String) {
+    init { require(EMAIL.matches(value)) { "invalid email: $value" } }
+    companion object { private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$") }
+}
+
+data class Customer(
+    val id: CustomerId,
+    val email: Email,
+    val name: String,
+) {
+    init { require(name.isNotBlank()) { "name is required" } }
+}
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3><span lang="en">Output ports — what the use case needs (gateways)</span><span lang="th">Output ports — สิ่งที่ use case ต้องการ (gateway)</span></h3>
+        <p><span lang="en">The use-case layer declares interfaces it <em>owns</em>, in business language — <code>findByEmail</code>, <code>save</code>, <code>welcome</code> — not <code>INSERT</code> or <code>SMTP</code>. In Clean these outbound interfaces are usually called <b>gateways</b>.</span><span lang="th">ชั้น use case ประกาศ interface ที่มัน <em>เป็นเจ้าของ</em> เป็นภาษาธุรกิจ — <code>findByEmail</code>, <code>save</code>, <code>welcome</code> — ไม่ใช่ <code>INSERT</code> หรือ <code>SMTP</code> ใน Clean เรียก interface ขาออกพวกนี้ว่า <b>gateway</b></span></p>
+        <div class="code-card"><div class="code-head">usecases/port/CustomerGateway.kt · Notifier.kt</div><div class="code-block code-host" data-src="s2" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s2">
+package com.ktb.shop.usecases.port
+
+import com.ktb.shop.entities.Customer
+import com.ktb.shop.entities.Email
+
+// OUTPUT port (a "gateway" in Clean terms): the use-case layer owns this contract and
+// calls outward through it. The implementation lives in the adapters layer.
+interface CustomerGateway {
+    fun findByEmail(email: Email): Customer?
+    fun save(customer: Customer)
+}
+
+interface Notifier {
+    fun welcome(customer: Customer)
+}
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3><span lang="en">Input boundary + cross-boundary models</span><span lang="th">Input boundary + model ข้าม boundary</span></h3>
+        <p><span lang="en">This is where Clean is more explicit than Hexagonal. The use case <b>exposes an interface</b> (the input boundary) that controllers call, and defines its <b>own request/response models</b> — deliberately separate from the web DTOs.</span><span lang="th">ตรงนี้คือจุดที่ Clean ละเอียดกว่า Hexagonal use case <b>เปิด interface</b> (input boundary) ให้ controller เรียก และนิยาม <b>request/response model ของตัวเอง</b> — แยกจาก web DTO โดยตั้งใจ</span></p>
+        <div class="code-card"><div class="code-head">usecases/register/RegisterCustomer.kt · RegisterModels.kt</div><div class="code-block code-host" data-src="s3" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s3">
+package com.ktb.shop.usecases.register
+
+// INPUT boundary: the contract a driving adapter (the controller) calls. The interactor
+// implements it. Controllers depend on THIS interface, never on the concrete interactor —
+// that inward-pointing dependency is the Clean Architecture "Dependency Rule".
+interface RegisterCustomer {
+    fun register(input: RegisterInput): RegisterOutput
+}
+
+// Request/response models that cross the use-case boundary. Plain data owned by the
+// use-case layer — deliberately SEPARATE from the web DTOs (which carry validation/Swagger
+// annotations in adapters/web). The controller maps DTO <-> these models.
+data class RegisterInput(val id: String, val email: String, val name: String)
+data class RegisterOutput(val id: String, val email: String, val name: String)
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3><span lang="en">The interactor — application business rules</span><span lang="th">interactor — application business rules</span></h3>
+        <p><span lang="en">Still pure Kotlin. The interactor <em>implements</em> the input boundary and depends only on the entities and the output ports — it has no idea a database or an email server exists.</span><span lang="th">ยังเป็น Kotlin ล้วน interactor <em>implement</em> input boundary และพึ่งแค่ entity กับ output port — จึงไม่รู้เลยว่ามีฐานข้อมูลหรือ mail server อยู่</span></p>
+        <div class="code-card"><div class="code-head">usecases/register/RegisterCustomerInteractor.kt</div><div class="code-block code-host" data-src="s4" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s4">
+package com.ktb.shop.usecases.register
+
+import com.ktb.shop.entities.*
+import com.ktb.shop.usecases.port.CustomerGateway
+import com.ktb.shop.usecases.port.Notifier
+
+// The interactor — Application Business Rules. Orchestrates entities + output ports.
+// No framework, no DB, no web: it is wired up in the frameworks layer (Beans.kt).
+class RegisterCustomerInteractor(
+    private val customers: CustomerGateway,   // output port
+    private val notifier: Notifier,           // output port
+) : RegisterCustomer {                         // implements the input boundary
+
+    override fun register(input: RegisterInput): RegisterOutput {
+        val email = Email(input.email)                                 // entity validates
+        if (customers.findByEmail(email) != null) throw EmailAlreadyUsed(input.email)
+
+        val customer = Customer(CustomerId(input.id), email, input.name)
+        customers.save(customer)        // talks to a gateway, not a DB
+        notifier.welcome(customer)      // talks to a gateway, not SMTP
+        return RegisterOutput(customer.id.value, customer.email.value, customer.name)
+    }
+}
+        </script>
+        <div class="callout good">
+          <span class="ttl">💡 <span lang="en">This is the win</span><span lang="th">นี่คือจุดที่ได้</span></span>
+          <span lang="en">Re-read <code>RegisterCustomerInteractor</code>: it's the same handful of lines whether the data sits in Postgres, a shard, or a test list — and it returns a <code>RegisterOutput</code>, never a raw entity. That stability + that boundary discipline is the whole point.</span>
+          <span lang="th">ลองอ่าน <code>RegisterCustomerInteractor</code> อีกครั้ง: โค้ดไม่กี่บรรทัดนี้เหมือนเดิมไม่ว่าข้อมูลจะอยู่ใน Postgres, shard หรือ list ในเทส — และคืน <code>RegisterOutput</code> ไม่เคยคืน entity ดิบ ความเสถียร + วินัยเรื่อง boundary นี้แหละคือหัวใจ</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3><span lang="en">The gateway adapters — real tech</span><span lang="th">gateway adapters — เทคโนโลยีจริง</span></h3>
+        <p><span lang="en">Now we touch Micronaut, in the <b>Interface Adapters</b> layer. A Micronaut Data repository does the SQL; our gateway implements the output port and <b>maps the DB row to the entity</b> (the row never crosses inward).</span><span lang="th">ตอนนี้ค่อยแตะ Micronaut ในชั้น <b>Interface Adapters</b>, Micronaut Data repository ทำ SQL ให้ ส่วน gateway ของเรา implement output port และ <b>แปลง row จาก DB เป็น entity</b> (row ไม่ข้ามเข้าด้านใน)</span></p>
+        <div class="code-card"><div class="code-head">adapters/persistence/CustomerPersistence.kt</div><div class="code-block code-host" data-src="s5" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s5">
+package com.ktb.shop.adapters.persistence
+// ... imports ...
+
+// DB shape — lives in the adapters layer, never crosses into entities/use-cases.
+@MappedEntity("customers")
+data class CustomerRow(@field:Id val id: String, val email: String, val name: String)
+
+// Micronaut Data generates the SQL (parameterized — no string concatenation).
+@JdbcRepository(dialect = Dialect.POSTGRES)
+interface CustomerData : CrudRepository<CustomerRow, String> {
+    fun findByEmail(email: String): CustomerRow?
+}
+
+// GATEWAY implementation: satisfies the use-case output port, maps row <-> entity.
+@Singleton
+class JdbcCustomerGateway(private val data: CustomerData) : CustomerGateway {
+    override fun findByEmail(email: Email): Customer? =
+        data.findByEmail(email.value)?.toEntity()
+    override fun save(customer: Customer) {
+        data.save(CustomerRow(customer.id.value, customer.email.value, customer.name))
+    }
+    private fun CustomerRow.toEntity() = Customer(CustomerId(id), Email(email), name)
+}
+        </script>
+        <div class="code-card"><div class="code-head">adapters/notification/LogNotifier.kt</div><div class="code-block code-host" data-src="s5b" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s5b">
+@Singleton
+class LogNotifier : Notifier {                 // swap for SMTP/SendGrid later — interactor unchanged
+    private val log = LoggerFactory.getLogger(javaClass)
+    override fun welcome(customer: Customer) {
+        log.info("welcome email -> {} ({})", customer.email.value, customer.name)
+    }
+}
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h3><span lang="en">The composition root — wiring</span><span lang="th">composition root — ประกอบร่าง</span></h3>
+        <p><span lang="en">In the <b>Frameworks &amp; Drivers</b> layer, one <code>@Factory</code> builds each framework-free interactor from its gateways and exposes it <b>by its input-boundary type</b>. This keeps the entities and use-case layers 100% annotation-free.</span><span lang="th">ในชั้น <b>Frameworks &amp; Drivers</b>, <code>@Factory</code> เดียวสร้าง interactor (ที่ไม่มี framework) จาก gateway ของมัน แล้ว expose <b>ด้วย type ของ input boundary</b> ทำให้ชั้น entity และ use case ไม่มี annotation เลย 100%</span></p>
+        <div class="code-card"><div class="code-head">frameworks/config/Beans.kt</div><div class="code-block code-host" data-src="s6" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s6">
+package com.ktb.shop.frameworks.config
+// ... imports ...
+
+// Composition root (frameworks layer): the single place that wires framework-free
+// interactors to their gateways and exposes them by their INPUT boundary type.
+@Factory
+class Beans {
+    @Singleton
+    fun registerCustomer(customers: CustomerGateway, notifier: Notifier): RegisterCustomer =
+        RegisterCustomerInteractor(customers, notifier)
+
+    @Singleton
+    fun listProductsByCategory(catalog: ProductGateway): ListProductsByCategory =
+        ListProductsByCategoryInteractor(catalog)
+}
+        </script>
+        <div class="callout info">
+          <span class="ttl">🔀 <span lang="en">Why expose the boundary, not the interactor?</span><span lang="th">ทำไม expose boundary ไม่ใช่ interactor?</span></span>
+          <span lang="en">The factory returns <code>RegisterCustomer</code> (the interface), so the controller is injected with the <b>boundary</b> and can never reach into the concrete <code>...Interactor</code>. The dependency arrow stays pointing inward — exactly the Dependency Rule.</span>
+          <span lang="th">factory คืน <code>RegisterCustomer</code> (interface) controller จึงได้รับ <b>boundary</b> และเอื้อมไปถึง <code>...Interactor</code> ตัวจริงไม่ได้ ลูกศร dependency จึงชี้เข้าในเสมอ — ตรงตาม Dependency Rule เป๊ะ</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h3><span lang="en">The controller — a driving Interface Adapter</span><span lang="th">controller — Interface Adapter ฝั่ง driving</span></h3>
+        <p><span lang="en">The web is just one way in. The controller depends only on the input boundary, maps <b>web DTO ⇄ use-case models</b>, and translates the result into a JSON response. No business rule lives here.</span><span lang="th">เว็บเป็นแค่ทางเข้าทางหนึ่ง controller พึ่งแค่ input boundary, แปลง <b>web DTO ⇄ use-case model</b> แล้วแปลงผลลัพธ์เป็น JSON ไม่มีกฎธุรกิจอยู่ตรงนี้</span></p>
+        <div class="code-card"><div class="code-head">adapters/web/CustomerController.kt · WebDtos.kt</div><div class="code-block code-host" data-src="s7" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s7">
+// INTERFACE ADAPTER (driving). Depends only on the INPUT boundary (RegisterCustomer),
+// never on the interactor. Maps web DTO <-> use-case models. No business rules here.
+@Controller("/api/customers")
+open class CustomerController(private val registerCustomer: RegisterCustomer) {
+    @Post
+    open fun register(@Valid @Body req: RegisterRequest): HttpResponse<CustomerResponse> {
+        val out = registerCustomer.register(RegisterInput(req.id, req.email, req.name))
+        return HttpResponse.created(CustomerResponse(out.id, out.email, out.name))
+    }
+}
+
+// Web DTOs live in the adapters layer — they carry HTTP concerns (validation, Swagger),
+// kept SEPARATE from the use-case's RegisterInput / RegisterOutput.
+@Serdeable
+data class RegisterRequest(
+    @field:NotBlank @field:Size(max = 64)  val id: String,
+    @field:NotBlank @field:Size(max = 320) val email: String,
+    @field:NotBlank @field:Size(max = 200) val name: String,
+)
+@Serdeable
+data class CustomerResponse(val id: String, val email: String, val name: String)
+        </script>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h3><span lang="en">The test — no DB, no web</span><span lang="th">test — ไม่ต่อ DB ไม่ต่อเว็บ</span></h3>
+        <p><span lang="en">Because the interactor depends only on output ports, you test it with tiny in-memory fakes. Milliseconds, no Micronaut context, no Docker — the TDD inner loop.</span><span lang="th">เพราะ interactor พึ่งแค่ output port จึงเทสด้วย fake แบบ in-memory เล็กๆ ได้ เร็วระดับมิลลิวินาที ไม่ต้องมี Micronaut context ไม่ต้อง Docker — คือ inner loop ของ TDD</span></p>
+        <div class="code-card"><div class="code-head">test/.../RegisterCustomerInteractorTest.kt</div><div class="code-block code-host" data-src="s8" data-lang="kotlin"></div></div>
+        <script type="text/plain" data-src-for="s8">
+// Fakes — a few lines each, no framework.
+private class InMemoryCustomers : CustomerGateway {
+    val saved = mutableListOf<Customer>()
+    override fun findByEmail(email: Email) = saved.find { it.email == email }
+    override fun save(customer: Customer) { saved += customer }
+}
+private class RecordingNotifier : Notifier {
+    var welcomed: Customer? = null
+    override fun welcome(customer: Customer) { welcomed = customer }
+}
+
+class RegisterCustomerInteractorTest {
+    @Test
+    fun `registers a new customer and welcomes them`() {
+        val customers = InMemoryCustomers()
+        val notifier = RecordingNotifier()
+
+        val out = RegisterCustomerInteractor(customers, notifier)
+            .register(RegisterInput("c1", "bird@shop.com", "Bird"))
+
+        assertEquals(1, customers.saved.size)
+        assertEquals("bird@shop.com", out.email)
+        assertEquals(out.email, notifier.welcomed?.email?.value)
+    }
+
+    @Test
+    fun `rejects a duplicate email`() {
+        val customers = InMemoryCustomers().apply {
+            save(Customer(CustomerId("c0"), Email("bird@shop.com"), "Bird"))
+        }
+        assertThrows<EmailAlreadyUsed> {
+            RegisterCustomerInteractor(customers, RecordingNotifier())
+                .register(RegisterInput("c1", "bird@shop.com", "Bird"))
+        }
+    }
+
+    @Test
+    fun `rejects an invalid email without touching the gateway`() {
+        val customers = InMemoryCustomers()
+        assertThrows<IllegalArgumentException> {
+            RegisterCustomerInteractor(customers, RecordingNotifier())
+                .register(RegisterInput("c1", "not-an-email", "Bird"))
+        }
+        assertEquals(0, customers.saved.size)   // entity rejected it before any I/O
+    }
+}
+        </script>
+      </div>
+    </div>
+  </div>
+</section>
+
+    <div class="callout good" style="margin-top:8px">
+      <span class="ttl">📦 <span lang="en">See it for real — a runnable project</span><span lang="th">ดูของจริง — โปรเจกต์ที่รันได้</span></span>
+      <span lang="en">Everything above is implemented as a complete Micronaut + Kotlin project at
+      <code>ex/clean/</code> — Postgres via Docker Compose, Flyway migrations, the cached
+      catalog gateway, TDD tests (unit + Testcontainers), a k6 load test, OpenAPI/Swagger, and a
+      pentest/production checklist. It's the twin of <code>ex/hexagonal/</code> (ports offset, so
+      you can run both at once). Start with its <a href="ex/clean/README.md">README</a>, then
+      <code>docker compose up --build</code>.</span>
+      <span lang="th">ทุกอย่างข้างบนถูก implement เป็นโปรเจกต์ Micronaut + Kotlin เต็มๆ ที่
+      <code>ex/clean/</code> — Postgres ผ่าน Docker Compose, Flyway migration, gateway catalog แบบ cache,
+      เทสแบบ TDD (unit + Testcontainers), load test ด้วย k6, OpenAPI/Swagger และ checklist สำหรับ pentest/production
+      เป็นฝาแฝดของ <code>ex/hexagonal/</code> (offset port ไว้ รันคู่กันได้)
+      เริ่มที่ <a href="ex/clean/README.md">README</a> แล้วสั่ง <code>docker compose up --build</code></span>
+    </div>
+
+<!-- ============ ONE PORT MANY ADAPTERS ============ -->
+<section class="section narrow" id="catalog">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">The payoff</span><span lang="th">ผลตอบแทน</span></span>
+    <h2><span lang="en">One gateway, many adapters — cache the catalog</span><span lang="th">หนึ่ง gateway หลาย adapter — cache ทั้ง catalog</span></h2>
+    <p class="section-desc"><span lang="en">With only 1,000 products and 100 categories, the whole catalog fits in memory. Watch an output port get a second adapter — and the inner layers not move.</span><span lang="th">ด้วยสินค้าเพียง 1,000 และ 100 หมวดหมู่ ทั้ง catalog ใส่ในหน่วยความจำได้ ดูว่า output port ได้ adapter ตัวที่สอง — โดยชั้นในไม่ขยับ</span></p>
+  </div>
+  <div class="reveal">
+    <div class="code-card core-card"><div class="code-head">🔒 <span lang="en">the output port (use cases depend on this)</span><span lang="th">output port (use case พึ่งอันนี้)</span></div><div class="code-block code-host" data-src="c1" data-lang="kotlin"></div></div>
+    <script type="text/plain" data-src-for="c1">
+// usecases/port/ProductGateway.kt — owned by the use-case layer.
+interface ProductGateway {
+    fun byCategory(category: CategoryId): List<Product>
+    fun byId(id: ProductId): Product?
+    fun all(): List<Product>
+}
+    </script>
+    <div class="code-grid">
+      <div class="code-card adapter-card"><div class="code-head">🐘 <span lang="en">adapter A — Postgres</span><span lang="th">adapter A — Postgres</span></div><div class="code-block code-host" data-src="c2" data-lang="kotlin"></div></div>
+      <div class="code-card adapter-card"><div class="code-head">⚡ <span lang="en">adapter B — in-memory cache</span><span lang="th">adapter B — cache ในหน่วยความจำ</span></div><div class="code-block code-host" data-src="c3" data-lang="kotlin"></div></div>
+    </div>
+    <script type="text/plain" data-src-for="c2">
+// GATEWAY A — the database-backed catalog.
+@Singleton
+@Named("db")
+class DbProductGateway(private val data: ProductData) : ProductGateway {
+    override fun byCategory(category: CategoryId) =
+        data.findByCategoryId(category.value).map { it.toEntity() }
+    override fun byId(id: ProductId) =
+        data.findById(id.value).orElse(null)?.toEntity()
+    override fun all() = data.findAll().map { it.toEntity() }
+}
+    </script>
+    <script type="text/plain" data-src-for="c3">
+// GATEWAY B — the WHOLE catalog in memory (only ~1K products / 100 categories).
+// @Primary: everything needing a ProductGateway gets THIS one. The use cases never know.
+@Singleton
+@Primary
+class CachedProductGateway(
+    @param:Named("db") private val source: ProductGateway,   // wraps adapter A
+) : ProductGateway {
+    private data class Snapshot(
+        val all: List<Product>,
+        val byId: Map<ProductId, Product>,
+        val byCat: Map<CategoryId, List<Product>>,
+    )
+    private val snapshot = AtomicReference(Snapshot(emptyList(), emptyMap(), emptyMap()))
+
+    @PostConstruct fun warm() = reload()
+
+    @Scheduled(fixedDelay = "5m")
+    fun reload() {
+        val all = source.all()
+        snapshot.set(Snapshot(all, all.associateBy { it.id }, all.groupBy { it.categoryId }))
+    }
+
+    override fun byCategory(category: CategoryId) = snapshot.get().byCat[category].orEmpty()
+    override fun byId(id: ProductId) = snapshot.get().byId[id]
+    override fun all() = snapshot.get().all
+}
+    </script>
+    <div class="callout good">
+      <span class="ttl">✅ <span lang="en">What changed in the inner layers?</span><span lang="th">ชั้นในเปลี่ยนอะไรบ้าง?</span></span>
+      <span lang="en"><b>Nothing.</b> The <code>ListProductsByCategory</code> use case still depends on <code>ProductGateway</code>. We added an adapter and flipped one <code>@Primary</code>. Decisions like "cache it" or "shard it" never reach the entities or use cases.</span>
+      <span lang="th"><b>ไม่มีอะไรเลย</b> use case <code>ListProductsByCategory</code> ยังพึ่ง <code>ProductGateway</code> เหมือนเดิม เราแค่เพิ่ม adapter และสลับ <code>@Primary</code> หนึ่งจุด การตัดสินใจอย่าง "cache" หรือ "shard" ไม่มีวันไปถึง entity หรือ use case</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRACTICE ============ -->
+<section class="section narrow" id="practice">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Day-to-day</span><span lang="th">ใช้งานจริง</span></span>
+    <h2><span lang="en">Practices &amp; naming — and the traps</span><span lang="th">วิธีปฏิบัติ &amp; การตั้งชื่อ — และกับดัก</span></h2>
+  </div>
+  <div class="adopt-grid reveal">
+    <div class="adopt-card yes">
+      <h3>✅ <span lang="en">Do</span><span lang="th">ควรทำ</span></h3>
+      <ul class="feature-list">
+        <li><span class="dot a"></span><span lang="en">Put each kind of code in its layer: <code>entities/</code>, <code>usecases/</code>, <code>adapters/</code>, <code>frameworks/</code>.</span><span lang="th">วางโค้ดแต่ละประเภทในชั้นของมัน: <code>entities/</code>, <code>usecases/</code>, <code>adapters/</code>, <code>frameworks/</code></span></li>
+        <li><span class="dot a"></span><span lang="en">Make controllers depend on the <b>input boundary</b>, never the interactor.</span><span lang="th">ให้ controller พึ่ง <b>input boundary</b> ไม่ใช่ interactor</span></li>
+        <li><span class="dot a"></span><span lang="en">Keep <b>use-case models</b> (<code>RegisterInput/Output</code>) separate from <b>web DTOs</b>; map between them in the controller.</span><span lang="th">แยก <b>use-case model</b> (<code>RegisterInput/Output</code>) ออกจาก <b>web DTO</b> แล้วแปลงกันใน controller</span></li>
+        <li><span class="dot a"></span><span lang="en">Let entities guard their own invariants (value objects like <code>Email</code>).</span><span lang="th">ให้ entity คุม invariant ของตัวเอง (value object เช่น <code>Email</code>)</span></li>
+      </ul>
+    </div>
+    <div class="adopt-card no">
+      <h3>🚫 <span lang="en">Don't (junior traps)</span><span lang="th">อย่าทำ (กับดัก junior)</span></h3>
+      <ul class="feature-list">
+        <li><span class="dot b"></span><span lang="en">Don't <code>import</code> anything from <code>adapters/</code> or <code>frameworks/</code> inside <code>entities/</code> or <code>usecases/</code>.</span><span lang="th">อย่า <code>import</code> อะไรจาก <code>adapters/</code> หรือ <code>frameworks/</code> เข้าไปใน <code>entities/</code> หรือ <code>usecases/</code></span></li>
+        <li><span class="dot b"></span><span lang="en">Don't return a <code>CustomerRow</code> / JPA entity from a gateway — return a domain entity.</span><span lang="th">อย่าคืน <code>CustomerRow</code> / JPA entity จาก gateway — ให้คืน domain entity</span></li>
+        <li><span class="dot b"></span><span lang="en">Don't let a web DTO leak into the use case (or annotate use-case models with <code>@Schema</code>).</span><span lang="th">อย่าให้ web DTO หลุดเข้าไปใน use case (หรือใส่ <code>@Schema</code> ใน use-case model)</span></li>
+        <li><span class="dot b"></span><span lang="en">Don't add four strict layers + mappers to a tiny CRUD app — that's just ceremony.</span><span lang="th">อย่าซอย 4 ชั้นเข้ม + mapper ให้แอป CRUD เล็กๆ — มันคือพิธีกรรมเปล่าๆ</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout info reveal">
+    <span class="ttl">📁 <span lang="en">A naming convention that scales</span><span lang="th">แนวตั้งชื่อที่ใช้ได้ระยะยาว</span></span>
+    <span lang="en"><code>entities/</code> (① enterprise rules) · <code>usecases/</code> + <code>usecases/port/</code> (② app rules + boundaries/gateways) · <code>adapters/web</code>, <code>adapters/persistence</code>, <code>adapters/notification</code> (③ interface adapters) · <code>frameworks/</code> + <code>frameworks/config</code> (④ main + composition root). One folder = one layer.</span>
+    <span lang="th"><code>entities/</code> (① กฎระดับองค์กร) · <code>usecases/</code> + <code>usecases/port/</code> (② กฎระดับแอป + boundary/gateway) · <code>adapters/web</code>, <code>adapters/persistence</code>, <code>adapters/notification</code> (③ interface adapter) · <code>frameworks/</code> + <code>frameworks/config</code> (④ main + composition root) — หนึ่งโฟลเดอร์ = หนึ่งชั้น</span>
+  </div>
+  <div class="callout reveal" style="margin-top:18px">
+    <span class="ttl">⚖️ <span lang="en">Clean vs Hexagonal — the same domain, two structures</span><span lang="th">Clean vs Hexagonal — โดเมนเดียว สองโครงสร้าง</span></span>
+    <span lang="en">Compared to the <a href="hexagonal.html">Hexagonal page</a>: Clean splits the use case into an <b>input boundary + interactor</b>, gives it its <b>own request/response models</b> (separate from web DTOs), names outbound ports <b>gateways</b>, and folders the code into <b>four named layers</b>. Hexagonal keeps one <code>RegisterCustomer</code> class and a flatter <code>domain/ + infra/</code>. Both obey the exact same Dependency Rule — Clean just makes the boundaries more concrete.</span>
+    <span lang="th">เทียบกับ <a href="hexagonal.html">หน้า Hexagonal</a>: Clean แยก use case เป็น <b>input boundary + interactor</b> ให้มี <b>request/response model ของตัวเอง</b> (แยกจาก web DTO) เรียก port ขาออกว่า <b>gateway</b> และจัดโค้ดเป็น <b>4 ชั้นที่มีชื่อ</b> ส่วน Hexagonal ใช้คลาส <code>RegisterCustomer</code> เดียวและโครง <code>domain/ + infra/</code> ที่แบนกว่า ทั้งคู่เคารพ Dependency Rule เดียวกันเป๊ะ — Clean แค่ทำ boundary ให้เป็นรูปธรรมกว่า</span>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY + FAQ + CHECKLIST ============ -->
+<section class="section narrow" id="faq">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Reference</span><span lang="th">อ้างอิง</span></span>
+    <h2><span lang="en">Glossary, FAQ &amp; a first-day checklist</span><span lang="th">Glossary, FAQ &amp; checklist วันแรก</span></h2>
+  </div>
+
+  <dl class="glossary reveal">
+    <div class="g"><dt>Entity</dt><dd><span lang="en">Enterprise business rules + the data they protect — the innermost circle.</span><span lang="th">กฎระดับองค์กร + ข้อมูลที่มันปกป้อง — วงในสุด</span></dd></div>
+    <div class="g"><dt>Use Case / Interactor</dt><dd><span lang="en">Application business rules; the interactor is the class implementing one scenario.</span><span lang="th">กฎระดับแอป; interactor คือคลาสที่ implement หนึ่ง scenario</span></dd></div>
+    <div class="g"><dt>Input boundary</dt><dd><span lang="en">The interface a controller calls; the interactor implements it.</span><span lang="th">interface ที่ controller เรียก; interactor เป็นคน implement</span></dd></div>
+    <div class="g"><dt>Output port / Gateway</dt><dd><span lang="en">An interface the use case needs (DB, email); an adapter implements it.</span><span lang="th">interface ที่ use case ต้องการ (DB, email); adapter เป็นคน implement</span></dd></div>
+    <div class="g"><dt>Interface Adapter</dt><dd><span lang="en">Controller / presenter / gateway impl — maps between inner and outer shapes.</span><span lang="th">Controller / presenter / ตัว implement gateway — แปลงรูประหว่างชั้นในกับชั้นนอก</span></dd></div>
+    <div class="g"><dt>Frameworks &amp; Drivers</dt><dd><span lang="en">The outermost layer — DB, web, the <code>main</code>; thin, swappable glue.</span><span lang="th">ชั้นนอกสุด — DB, web, <code>main</code>; เป็น glue บางๆ ที่สลับได้</span></dd></div>
+    <div class="g"><dt>Composition root</dt><dd><span lang="en">The single place that wires interactors to gateways (a <code>@Factory</code>).</span><span lang="th">จุดเดียวที่ประกอบ interactor เข้ากับ gateway (เช่น <code>@Factory</code>)</span></dd></div>
+  </dl>
+
+  <div class="faq reveal" style="margin-top:24px">
+    <details><summary><span lang="en">Why an input boundary AND an interactor — isn't that two files for one thing?</span><span lang="th">ทำไมต้องมีทั้ง input boundary และ interactor — มันคือ 2 ไฟล์เพื่อของชิ้นเดียวไม่ใช่เหรอ?</span></summary>
+      <p><span lang="en">The interface (boundary) is what the controller compiles against; the interactor is the swappable implementation. It lets you fake the use case in adapter tests, expose two implementations, and keeps the dependency pointing inward. For a tiny app it can feel like ceremony — Hexagonal collapses them into one class.</span><span lang="th">interface (boundary) คือสิ่งที่ controller compile ด้วย ส่วน interactor คือ implementation ที่สลับได้ ทำให้ fake use case ในเทส adapter ได้, มี implementation สองตัวได้ และคง dependency ให้ชี้เข้าใน สำหรับแอปเล็กๆ อาจรู้สึกเป็นพิธีกรรม — Hexagonal ยุบทั้งคู่เป็นคลาสเดียว</span></p>
+    </details>
+    <details><summary><span lang="en">Do I really need separate request/response models from the web DTOs?</span><span lang="th">ต้องแยก request/response model จาก web DTO จริงๆ เหรอ?</span></summary>
+      <p><span lang="en">It's Clean's recommendation, and it pays off when the use case has more than one driver (REST + a CLI + a queue) or when the JSON shape diverges from what the use case needs. For a single REST entry point, some teams reuse the DTO — a pragmatic shortcut, but you lose the firewall.</span><span lang="th">เป็นคำแนะนำของ Clean และคุ้มเมื่อ use case มี driver มากกว่าหนึ่ง (REST + CLI + queue) หรือเมื่อรูป JSON ต่างจากที่ use case ต้องการ ถ้ามีทางเข้า REST ทางเดียว บางทีมใช้ DTO ซ้ำ — เป็นทางลัด pragmatic แต่จะเสีย firewall ไป</span></p>
+    </details>
+    <details><summary><span lang="en">Where does validation go — controller or core?</span><span lang="th">validation อยู่ตรงไหน — controller หรือ core?</span></summary>
+      <p><span lang="en">Shape checks (is the JSON well-formed, fields present?) sit on the web DTO (<code>@NotBlank</code>, <code>@Size</code>). <b>Business rules</b> (email must be a valid email and unique) belong in the entity and the interactor, where they're tested without a web layer.</span><span lang="th">การตรวจรูปแบบ (JSON ถูกโครงสร้าง, มีฟิลด์ครบไหม) อยู่ที่ web DTO (<code>@NotBlank</code>, <code>@Size</code>) ส่วน <b>กฎธุรกิจ</b> (อีเมลต้องถูกรูปแบบและห้ามซ้ำ) อยู่ใน entity และ interactor ที่เทสได้โดยไม่ต้องมีชั้นเว็บ</span></p>
+    </details>
+    <details><summary><span lang="en">Is this the same as Hexagonal?</span><span lang="th">อันนี้เหมือน Hexagonal ไหม?</span></summary>
+      <p><span lang="en">Same goal, different emphasis. Hexagonal focuses on the in/out boundary (ports &amp; adapters); Clean adds named concentric layers and more explicit boundaries/models. Uncle Bob calls Clean a superset that integrates Hexagonal, Onion, DCI and BCE. See the <a href="index.html#versus">comparison</a>.</span><span lang="th">เป้าหมายเดียวกัน เน้นต่างกัน Hexagonal เน้นขอบ in/out (port &amp; adapter) ส่วน Clean เพิ่มชั้นซ้อนที่มีชื่อและ boundary/model ที่ชัดกว่า Uncle Bob บอกว่า Clean เป็น superset ที่รวม Hexagonal, Onion, DCI, BCE ดู <a href="index.html#versus">ตารางเทียบ</a></span></p>
+    </details>
+  </div>
+
+  <div class="callout good reveal" style="margin-top:26px">
+    <span class="ttl">🚀 <span lang="en">First-day checklist</span><span lang="th">checklist วันแรก</span></span>
+    <ul class="checklist">
+      <li><span lang="en">Find <code>entities/</code> — read the value objects and rules first (the innermost circle).</span><span lang="th">หา <code>entities/</code> — อ่าน value object และกฎก่อน (วงในสุด)</span></li>
+      <li><span lang="en">In <code>usecases/</code>, read each input boundary + its interactor; in <code>usecases/port/</code>, the gateways.</span><span lang="th">ใน <code>usecases/</code> อ่าน input boundary + interactor ของมัน; ใน <code>usecases/port/</code> ดู gateway</span></li>
+      <li><span lang="en">For each gateway, find its implementation in <code>adapters/</code>.</span><span lang="th">แต่ละ gateway หา implementation ของมันใน <code>adapters/</code></span></li>
+      <li><span lang="en">Open the composition root (<code>frameworks/config/Beans.kt</code>) to see how it's wired.</span><span lang="th">เปิด composition root (<code>frameworks/config/Beans.kt</code>) เพื่อดูว่าประกอบกันยังไง</span></li>
+      <li><span lang="en">Write your first feature inside-out: entity → port → boundary → interactor → adapter → test.</span><span lang="th">เขียนฟีเจอร์แรกแบบ inside-out: entity → port → boundary → interactor → adapter → test</span></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <img src="logo.jpeg" alt="Krungthai" class="footer-logo" />
+  <p><span lang="en">Made by <b>Dekdee</b> for Bird · KTB / KM</span><span lang="th">สร้างโดย <b>เด็กดี</b> สำหรับคุณเบิร์ด · KTB / KM</span></p>
+  <p class="muted"><a href="index.html" class="back-link">← <span lang="en">Back to the Hexagonal vs Clean overview</span><span lang="th">กลับไปหน้าเทียบ Hexagonal vs Clean</span></a></p>
+</footer>
+
+<script type="module">
+  import { createHighlighter } from 'https://esm.sh/shiki@4.2.0';
+  (async () => {
+    try {
+      const hl = await createHighlighter({ themes: ['github-dark', 'github-light'], langs: ['kotlin'] });
+      window.codeHL = (code, lang) => hl.codeToHtml(code, { lang, themes: { dark: 'github-dark', light: 'github-light' }, defaultColor: 'dark' });
+      document.dispatchEvent(new CustomEvent('shiki-ready'));
+    } catch (e) { console.warn('Shiki failed to load — plain code fallback', e); }
+  })();
+</script>
+<script src="script.js"></script>
+</body>
+</html>
