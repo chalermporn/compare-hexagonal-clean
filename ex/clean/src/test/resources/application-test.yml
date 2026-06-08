@@ -1,0 +1,6 @@
+# datasource url/user/password are injected at runtime by PostgresSupport
+# (Testcontainers). Flyway migrates the throwaway container before each run.
+flyway:
+  datasources:
+    default:
+      enabled: true

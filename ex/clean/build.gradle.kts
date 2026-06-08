@@ -61,7 +61,7 @@ dependencies {
 }
 
 application {
-    mainClass = "com.ktb.shop.ApplicationKt"
+    mainClass = "com.ktb.shop.frameworks.ApplicationKt"
 }
 
 java {
@@ -79,12 +79,6 @@ micronaut {
         incremental(true)
         annotations("com.ktb.shop.*")
     }
-}
-
-// Tell the OpenAPI KSP processor to also render the interactive UIs. It bundles the assets
-// into META-INF/swagger/views/** at build time, so the docs work fully offline (no CDN).
-ksp {
-    arg("micronaut.openapi.views.spec", "swagger-ui.enabled=true,redoc.enabled=true,rapidoc.enabled=true")
 }
 
 // Dev convenience: `./gradlew run` first brings up the local Postgres via the Docker CLI
@@ -108,4 +102,10 @@ val composeUpDb by tasks.registering(Exec::class) {
 }
 tasks.named("run") {
     dependsOn(composeUpDb)
+}
+
+// Tell the OpenAPI KSP processor to also render the interactive UIs. It bundles the assets
+// into META-INF/swagger/views/** at build time, so the docs work fully offline (no CDN).
+ksp {
+    arg("micronaut.openapi.views.spec", "swagger-ui.enabled=true,redoc.enabled=true,rapidoc.enabled=true")
 }

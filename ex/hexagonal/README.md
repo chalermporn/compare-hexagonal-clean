@@ -114,12 +114,13 @@ docker run --rm -v "$PWD":/app -w /app gradle:8.14-jdk21 gradle wrapper --gradle
 จากนั้น:
 
 ```bash
-# ยก Postgres อย่างเดียวไว้ให้ app ที่รันนอกคอนเทนเนอร์
-docker compose up -d db
-
-./gradlew run            # รันแอป (อ่าน DB_URL/DB_USER/DB_PASSWORD จาก env, มี default อยู่แล้ว)
-./gradlew build          # compile + test
+./gradlew run            # รันแอป — ยก Postgres (docker compose) ให้อัตโนมัติ แล้วรอจน healthy
+./gradlew build          # compile + test (integration ใช้ Docker)
 ```
+
+`./gradlew run` มี task `composeUpDb` ที่สั่ง `docker compose up -d --wait db` ให้ก่อน จึงไม่ต้อง
+ยก DB เอง และไม่เจอ Hikari fail-fast "connection refused" บนเครื่องที่ยังไม่มี DB (idempotent —
+ข้ามถ้า db ขึ้นอยู่แล้ว). ต้องมี **Docker** รันอยู่
 
 **Version matrix** (lock ไว้ใน `build.gradle.kts`): Kotlin **2.1.21** · KSP **2.1.21-2.0.2** ·
 Micronaut application plugin **4.6.2** · Gradle **8.14** · JDK **21**
