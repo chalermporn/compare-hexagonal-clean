@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- Self-hosted Swagger UI (swagger-ui-dist 5.32.6, vendored — no CDN, works
+     offline). The inline boot script below is why the docs CSP allows
+     'unsafe-inline'; see middleware.go. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hexagonal Shop API (Go) — Swagger UI</title>
+  <link rel="stylesheet" href="./swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="./swagger-ui-bundle.js"></script>
+  <script src="./swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: "/swagger/openapi.yml",
+      dom_id: "#swagger-ui",
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+      layout: "StandaloneLayout",
+    });
+  </script>
+</body>
+</html>
