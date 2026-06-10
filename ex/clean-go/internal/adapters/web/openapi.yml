@@ -1,0 +1,170 @@
+openapi: 3.0.3
+info:
+  title: Clean Shop API (Go)
+  version: 0.1.0
+  description: >-
+    ตัวอย่าง e-commerce + สมาชิก ที่สาธิต Clean Architecture (4 ชั้น)
+    ด้วย Go (stdlib net/http) ต่อ PostgreSQL.
+    REST controller เป็น *interface adapter* — พึ่ง input boundary ของ use case
+    และแปลง HTTP ↔ use-case model โดยไม่มี business rule.
+  contact:
+    name: KTB KM
+    email: chalermporn.po@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  # Relative URL first: "Try it out" hits the same origin the docs are served
+  # from — no CORS, and it passes the API's connect-src 'self' CSP.
+  - url: /
+    description: เซิร์ฟเวอร์เดียวกับหน้า docs นี้ (same-origin)
+  - url: http://localhost:9001
+    description: Local dev (go run ./cmd/server)
+  - url: http://localhost:8091
+    description: Docker Compose (docker compose up)
+tags:
+  - name: Customers
+    description: สมัครสมาชิก (register customer)
+  - name: Products
+    description: ดูสินค้าตามหมวดหมู่ (เสิร์ฟจาก cached gateway)
+paths:
+  /api/customers:
+    post:
+      tags: [Customers]
+      summary: สมัครสมาชิกใหม่
+      description: >-
+        สร้างลูกค้าใหม่ — entity (Email, CustomerID) ตรวจความถูกต้องที่แก่นกลาง;
+        ถ้าอีเมลซ้ำจะได้ 409, ถ้า payload ผิดรูปจะได้ 400 โดยไม่แตะ DB
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: สมัครสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          description: payload ผิดรูป (validation ล้มเหลว / อีเมลผิดรูปแบบ)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: อีเมลถูกใช้ลงทะเบียนไปแล้ว
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: เรียกถี่เกิน rate limit (100 req/นาที ต่อ IP)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/products/category/{categoryId}:
+    get:
+      tags: [Products]
+      summary: ดูสินค้าตามหมวดหมู่
+      description: >-
+        คืนรายการสินค้าในหมวดที่ระบุ เสิร์ฟจาก cached gateway
+        (ทั้ง catalog ~1K รายการอยู่ในแรม).
+        หมวดที่ไม่มีสินค้าจะคืน array ว่าง (200) ไม่ใช่ 404
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          description: รหัสหมวดหมู่
+          example: c1
+          schema:
+            type: string
+      responses:
+        '200':
+          description: รายการสินค้า (อาจว่างได้)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+        '429':
+          description: เรียกถี่เกิน rate limit (100 req/นาที ต่อ IP)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /health:
+    get:
+      summary: Health check (ใช้โดย docker healthcheck)
+      responses:
+        '200':
+          description: แอป + DB พร้อมใช้งาน
+        '503':
+          description: DB ไม่พร้อม
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      description: ข้อมูลที่ใช้สมัครสมาชิกใหม่
+      required: [id, email, name]
+      properties:
+        id:
+          type: string
+          maxLength: 64
+          description: รหัสลูกค้า (unique)
+          example: c100
+        email:
+          type: string
+          maxLength: 320
+          description: อีเมล (ต้องไม่ซ้ำ และต้องถูกรูปแบบ)
+          example: bird@shop.com
+        name:
+          type: string
+          maxLength: 200
+          description: ชื่อ-นามสกุลที่แสดง
+          example: Bird
+    CustomerResponse:
+      type: object
+      description: ลูกค้าที่สมัครสำเร็จ
+      properties:
+        id:
+          type: string
+          example: c100
+        email:
+          type: string
+          example: bird@shop.com
+        name:
+          type: string
+          example: Bird
+    ProductResponse:
+      type: object
+      description: สินค้าหนึ่งรายการในหมวดหมู่
+      properties:
+        id:
+          type: string
+          example: p1
+        categoryId:
+          type: string
+          example: c1
+        name:
+          type: string
+          example: Blue T-Shirt
+        priceCents:
+          type: integer
+          format: int64
+          description: ราคาเป็นหน่วยสตางค์ (เลี่ยง floating point ของเงิน)
+          example: 29900
+    ApiError:
+      type: object
+      description: รูปแบบ error มาตรฐาน — ไม่มี stack trace (pentest baseline)
+      properties:
+        code:
+          type: string
+          example: email_conflict
+        message:
+          type: string
+          example: email already registered

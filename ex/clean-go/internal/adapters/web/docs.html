@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- Minimal self-contained docs page: zero external assets (no CDN), so it
+     works offline and keeps the attack surface tiny. For a full interactive
+     UI, point Swagger UI / ReDoc at /swagger/openapi.yml. -->
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clean Shop API (Go) — Docs</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 56rem;
+         margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+  h1 { font-size: 1.4rem; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+              background: rgba(127,127,127,.12); border-radius: 6px; }
+  code { padding: .1rem .35rem; }
+  pre { padding: .8rem 1rem; overflow-x: auto; }
+  .method { display: inline-block; min-width: 3.5rem; font-weight: 700; }
+  .get { color: #2563eb; } .post { color: #16a34a; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid rgba(127,127,127,.35); padding: .35rem .6rem; }
+</style>
+</head>
+<body>
+<h1>Clean Shop API (Go) — v0.1.0</h1>
+<p><strong>ลองยิง API ได้เลย:</strong> <a href="/swagger-ui/"><code>/swagger-ui/</code></a> (Swagger UI, self-hosted)</p>
+<p>สเปกฉบับเต็ม (OpenAPI 3): <a href="/swagger/openapi.yml"><code>/swagger/openapi.yml</code></a>
+   — นำไปเปิดใน ReDoc / Postman ได้โดยตรง</p>
+
+<h2>Endpoints</h2>
+<table>
+  <tr><th>Endpoint</th><th>คำอธิบาย</th><th>ผลลัพธ์</th></tr>
+  <tr>
+    <td><span class="method post">POST</span> <code>/api/customers</code></td>
+    <td>สมัครสมาชิกใหม่</td>
+    <td>201 · 400 (payload ผิดรูป) · 409 (อีเมลซ้ำ) · 429</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span> <code>/api/products/category/{categoryId}</code></td>
+    <td>ดูสินค้าตามหมวดหมู่ (เสิร์ฟจาก cached gateway)</td>
+    <td>200 (array ว่างได้) · 429</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span> <code>/health</code></td>
+    <td>health check (docker/k8s probe)</td>
+    <td>200 · 503</td>
+  </tr>
+</table>
+
+<h2>ตัวอย่าง</h2>
+<pre>curl -i -X POST localhost:8091/api/customers \
+  -H 'Content-Type: application/json' \
+  -d '{"id":"c100","email":"bird@shop.com","name":"Bird"}'
+
+curl -s localhost:8091/api/products/category/c1</pre>
+</body>
+</html>

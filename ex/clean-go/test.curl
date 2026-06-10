@@ -1,0 +1,4 @@
+# สมัครสมาชิก
+curl -i -X POST localhost:8091/api/customers \
+  -H 'Content-Type: application/json' \
+  -d '{"id":"c100","email":"bird@shop.com","name":"Bird"}'
