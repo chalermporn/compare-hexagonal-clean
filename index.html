@@ -176,15 +176,15 @@
       <span class="tl-year">1992</span>
       <div class="tl-card">
         <div class="tl-title">BCE — Boundary · Control · Entity <span class="tl-who">Ivar Jacobson · OOSE</span></div>
-        <p><span lang="en">Splits objects that touch the outside (Boundary) from pure business objects (Entity). The first seed of “keep the core away from I/O”.</span><span lang="th">แยก object ที่แตะโลกภายนอก (Boundary) ออกจาก object ธุรกิจล้วนๆ (Entity) — เมล็ดพันธุ์แรกของแนวคิด “กัน core ออกจาก I/O”</span></p>
+        <p><span lang="en">Jacobson — the <b>“father of use cases”</b> and later a driving force behind UML and the Rational Unified Process — sorted objects into three stereotypes in his book <em>Object-Oriented Software Engineering</em>: <b>Boundary</b> (talks to actors), <b>Entity</b> (long-lived business data) and <b>Control</b> (coordinates one use case). Grouping objects by <b>what makes them change</b> — UI churn vs. business rules — is the earliest ancestor of keeping the core away from I/O.</span><span lang="th">Jacobson — <b>“บิดาแห่ง use case”</b> และต่อมาเป็นกำลังหลักของ UML กับ Rational Unified Process — จัด object เป็น 3 ประเภทในหนังสือ <em>Object-Oriented Software Engineering</em>: <b>Boundary</b> (คุยกับ actor), <b>Entity</b> (ข้อมูลธุรกิจที่อยู่ยาว) และ <b>Control</b> (ประสานงานหนึ่ง use case). การจัดกลุ่ม object ตาม <b>“อะไรทำให้มันเปลี่ยน”</b> — เรื่อง UI vs. กฎธุรกิจ — คือบรรพบุรุษเก่าสุดของการกัน core ออกจาก I/O</span></p>
       </div>
     </div>
     <div class="tl-item n">
       <span class="tl-dot n"></span>
       <span class="tl-year">2003</span>
       <div class="tl-card">
-        <div class="tl-title">Domain-Driven Design <span class="tl-who">Eric Evans</span></div>
-        <p><span lang="en">Puts the domain model at the centre and pushes infrastructure to the edges — the inner layers of both patterns inherit this mindset.</span><span lang="th">วางโดเมนโมเดลไว้ศูนย์กลาง ดันโครงสร้างพื้นฐานออกไปขอบ — ชั้นในของทั้งสอง pattern สืบแนวคิดนี้มา</span></p>
+        <div class="tl-title">Domain-Driven Design <span class="tl-who">Eric Evans · the “blue book”</span></div>
+        <p><span lang="en">Evans saw complex systems rot whenever the code drifted away from the business it served. His answer: put the <b>domain model at the heart</b> of design and bind developers and domain experts to one shared <b>Ubiquitous Language</b>. The building blocks he named — <b>Entities, Value Objects, Repositories, Aggregates</b> — and his rule to isolate the domain layer became exactly the inner rings both later patterns work to protect.</span><span lang="th">Evans เห็นว่าระบบซับซ้อนจะ “ผุพัง” ทุกครั้งที่โค้ดหลุดจากธุรกิจที่มันรองรับ. คำตอบของเขาคือวาง <b>domain model ไว้เป็นหัวใจ</b> ของการออกแบบ และมัดนักพัฒนากับผู้เชี่ยวชาญโดเมนไว้ด้วย <b>Ubiquitous Language</b> เดียวกัน. building block ที่เขาตั้งชื่อ — <b>Entity, Value Object, Repository, Aggregate</b> — กับกฎให้แยกชั้นโดเมนออกมา กลายเป็นวงในที่ทั้งสอง pattern พยายามปกป้องนั่นเอง</span></p>
       </div>
     </div>
     <div class="tl-item a">
@@ -192,15 +192,15 @@
       <span class="tl-year">2005</span>
       <div class="tl-card">
         <div class="tl-title">Hexagonal — Ports &amp; Adapters <span class="tl-badge a">⬡ Hexagonal</span> <span class="tl-who">Alistair Cockburn</span></div>
-        <p><span lang="en">Cockburn names it “Ports &amp; Adapters”: the core is ringed by symmetric ports and the outside plugs in through adapters. Drawn as a hexagon only to leave room for many ports — not because of six sides.</span><span lang="th">Cockburn ตั้งชื่อ “Ports &amp; Adapters”: core ถูกล้อมด้วย port แบบสมมาตร โลกภายนอกเสียบผ่าน adapter — ที่วาดเป็นหกเหลี่ยมเพื่อให้มีที่วาง port หลายตัว ไม่ใช่เพราะต้องมี 6 ด้าน</span></p>
+        <p><span lang="en">Cockburn — a use-case authority and one of the 17 signatories of the <b>Agile Manifesto</b> — kept hitting the same bug: business logic leaking into the UI, and an app you couldn’t test without a real database. His stated goal was to <b>“allow an application to be driven equally by users, programs, automated tests or scripts, and to be developed and tested in isolation from its eventual run-time devices and databases.”</b> A <b>port</b> is the contract the core owns; an <b>adapter</b> plugs the real world into it. The hexagon was just a drawing with room for several ports — so he later preferred the clearer name <b>“Ports &amp; Adapters.”</b></span><span lang="th">Cockburn — ผู้เชี่ยวชาญ use case และ 1 ใน 17 ผู้ลงนาม <b>Agile Manifesto</b> — เจอบั๊กเดิมซ้ำๆ: business logic รั่วเข้า UI และแอปที่เทสไม่ได้ถ้าไม่มี DB จริง. เป้าหมายที่เขาประกาศไว้คือ <b>“ให้แอปถูกขับได้เท่าๆ กันไม่ว่าจะจาก user, โปรแกรม, automated test หรือ script และพัฒนา/เทสได้โดยแยกขาดจากอุปกรณ์และฐานข้อมูลปลายทาง”</b>. <b>port</b> คือสัญญาที่ core เป็นเจ้าของ ส่วน <b>adapter</b> คือตัวเสียบโลกจริงเข้ามา. รูปหกเหลี่ยมเป็นแค่ภาพที่มีที่ว่างพอวาง port หลายตัว เขาจึงเปลี่ยนมาใช้ชื่อที่ชัดกว่าว่า <b>“Ports &amp; Adapters”</b></span></p>
       </div>
     </div>
     <div class="tl-item n">
       <span class="tl-dot n"></span>
       <span class="tl-year">2008</span>
       <div class="tl-card">
-        <div class="tl-title">Onion Architecture <span class="tl-who">Jeffrey Palermo</span></div>
-        <p><span lang="en">Arranges the core as concentric rings with Inversion of Control — the visual bridge from Hexagonal’s edges to Clean’s circles.</span><span lang="th">จัด core เป็นวงแหวนซ้อนกันด้วย Inversion of Control — เป็นสะพานภาพจาก “ขอบ” ของ Hexagonal ไปสู่ “วงกลม” ของ Clean</span></p>
+        <div class="tl-title">Onion Architecture <span class="tl-who">Jeffrey Palermo · .NET</span></div>
+        <p><span lang="en">Palermo, a .NET architect, attacked classic <b>N-tier</b>, where every layer ultimately depends on the <b>database sitting at the bottom</b>. In a series of blog posts he turned the stack inside-out: the <b>domain model sits at the centre</b>, infrastructure moves to the outermost ring, and every dependency points inward through interfaces (<b>Inversion of Control</b>). It’s the visual step from Hexagonal’s flat edges to Clean’s concentric circles.</span><span lang="th">Palermo สถาปนิกสาย .NET โจมตี <b>N-tier</b> แบบเดิมที่ทุกชั้นสุดท้ายไปพึ่ง <b>ฐานข้อมูลที่ก้นสุด</b>. เขาเขียนบล็อกชุดหนึ่งกลับด้านกองชั้นนั้น: วาง <b>domain model ไว้ตรงกลาง</b>, ดัน infrastructure ออกไปวงนอกสุด, และให้ทุก dependency ชี้เข้าด้านในผ่าน interface (<b>Inversion of Control</b>). เป็นก้าวเชิงภาพจาก “ขอบแบนๆ” ของ Hexagonal ไปสู่ “วงกลมซ้อน” ของ Clean</span></p>
       </div>
     </div>
     <div class="tl-item b">
@@ -208,7 +208,7 @@
       <span class="tl-year">2012</span>
       <div class="tl-card">
         <div class="tl-title">Clean Architecture <span class="tl-badge b">◎ Clean</span> <span class="tl-who">Robert C. Martin (Uncle Bob)</span></div>
-        <p><span lang="en">The blog post “The Clean Architecture” (Aug 2012) integrates Hexagonal + Onion + DCI + BCE into four concentric layers under one Dependency Rule: source dependencies point inward only.</span><span lang="th">บล็อก “The Clean Architecture” (ส.ค. 2012) รวม Hexagonal + Onion + DCI + BCE เป็น 4 วงซ้อน ภายใต้ Dependency Rule เดียว: source dependency ชี้เข้าด้านในเท่านั้น</span></p>
+        <p><span lang="en">Martin — a co-author of the Agile Manifesto and the popularizer of the <b>SOLID</b> principles — noticed that Hexagonal, Onion, BCE and DCI were all telling the <b>same story in different words</b>. In the blog post <em>The Clean Architecture</em> (Aug 2012) he merged them into one diagram: four concentric layers — <b>Entities → Use Cases → Interface Adapters → Frameworks &amp; Drivers</b> — held together by a single law, <b>The Dependency Rule</b>: source-code dependencies may point only inward.</span><span lang="th">Martin — ผู้ร่วมเขียน Agile Manifesto และผู้ทำให้หลัก <b>SOLID</b> แพร่หลาย — สังเกตว่า Hexagonal, Onion, BCE และ DCI ล้วน <b>เล่าเรื่องเดียวกันด้วยคำต่างกัน</b>. ในบล็อก <em>The Clean Architecture</em> (ส.ค. 2012) เขารวมทั้งหมดเป็นภาพเดียว: 4 วงซ้อน — <b>Entities → Use Cases → Interface Adapters → Frameworks &amp; Drivers</b> — ยึดไว้ด้วยกฎข้อเดียวคือ <b>The Dependency Rule</b>: source-code dependency ชี้เข้าด้านในได้เท่านั้น</span></p>
       </div>
     </div>
     <div class="tl-item b">
@@ -216,7 +216,7 @@
       <span class="tl-year">2017</span>
       <div class="tl-card">
         <div class="tl-title">Clean Architecture — the book <span class="tl-who">Robert C. Martin</span></div>
-        <p><span lang="en">“Clean Architecture: A Craftsman’s Guide to Software Structure and Design” collects the ideas into a full book.</span><span lang="th">หนังสือ “Clean Architecture: A Craftsman’s Guide to Software Structure and Design” รวบรวมแนวคิดทั้งหมดเป็นเล่มเต็ม</span></p>
+        <p><span lang="en"><em>Clean Architecture: A Craftsman’s Guide to Software Structure and Design</em> grows the 2012 post into a full treatise — tying the layers back to <b>SOLID</b> and component-cohesion principles, and sharpening the line between <b>policy</b> (what the software does) and <b>detail</b> (how it’s delivered: the web, the DB, the framework).</span><span lang="th">หนังสือ <em>Clean Architecture: A Craftsman’s Guide to Software Structure and Design</em> ขยายบล็อกปี 2012 เป็นตำราเต็มเล่ม — ผูกชั้นต่างๆ กลับเข้ากับหลัก <b>SOLID</b> และ component cohesion และลากเส้นแบ่งให้คมระหว่าง <b>policy</b> (ซอฟต์แวร์ทำอะไร) กับ <b>detail</b> (ส่งมอบอย่างไร: web, DB, framework)</span></p>
       </div>
     </div>
     <div class="tl-item a">
@@ -224,7 +224,7 @@
       <span class="tl-year">2024</span>
       <div class="tl-card">
         <div class="tl-title">Hexagonal — the book <span class="tl-who">A. Cockburn &amp; J. M. Garrido de Paz</span></div>
-        <p><span lang="en">Nearly two decades on, Cockburn (with Juan Manuel Garrido de Paz) publishes the definitive Hexagonal book (April 2024).</span><span lang="th">เกือบสองทศวรรษให้หลัง Cockburn (ร่วมกับ Juan Manuel Garrido de Paz) ออกหนังสือ Hexagonal ฉบับสมบูรณ์ (เม.ย. 2024)</span></p>
+        <p><span lang="en">For nearly two decades the pattern lived mostly in a wiki article and conference talks. In <b>April 2024</b> Cockburn, together with <b>Juan Manuel Garrido de Paz</b>, finally published the definitive book — pinning down the canonical definition and clearing up years of <b>“but how many sides?”</b> misreadings of the hexagon.</span><span lang="th">เกือบสองทศวรรษที่ pattern นี้อยู่แค่ในบทความวิกิกับ talk ตามงานสัมมนา. <b>เมษายน 2024</b> Cockburn ร่วมกับ <b>Juan Manuel Garrido de Paz</b> ออกหนังสือฉบับสมบูรณ์เสียที — ปักนิยามมาตรฐานและเคลียร์ความเข้าใจผิดเรื่อง <b>“ตกลงมันกี่ด้าน?”</b> ของรูปหกเหลี่ยมที่สะสมมาหลายปี</span></p>
       </div>
     </div>
   </div>

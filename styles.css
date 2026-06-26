@@ -366,7 +366,9 @@ html[data-theme="light"] .code-block .shiki { background: transparent !important
 .tl-item.n .tl-card:hover { border-color: var(--text-dim); }
 .tl-title { font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; line-height: 1.35; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
 .tl-who { font-size: .8rem; color: var(--text-mute); font-weight: 500; }
-.tl-card p { color: var(--text-dim); font-size: .92rem; line-height: 1.55; margin-top: 7px; }
+.tl-card p { color: var(--text-dim); font-size: .92rem; line-height: 1.6; margin-top: 7px; }
+.tl-card p b { color: var(--text); font-weight: 600; }
+.tl-card p em { color: var(--text); font-style: italic; font-weight: 500; }
 .tl-badge { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
 .tl-badge.a { color: var(--accent-a); border: 1px solid var(--accent-a-glow); }
 .tl-badge.b { color: var(--accent-b); border: 1px solid var(--accent-b-glow); }
