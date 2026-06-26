@@ -42,6 +42,7 @@
   <div class="nav-links">
     <a href="#hex"><span lang="en">Hexagonal</span><span lang="th">Hexagonal</span></a>
     <a href="#clean"><span lang="en">Clean</span><span lang="th">Clean</span></a>
+    <a href="#origins"><span lang="en">History</span><span lang="th">ที่มา</span></a>
     <a href="#structure"><span lang="en">Structure</span><span lang="th">โครงสร้าง</span></a>
     <a href="#versus"><span lang="en">Compare</span><span lang="th">เทียบกัน</span></a>
     <a href="#code"><span lang="en">5 languages</span><span lang="th">โค้ด 5 ภาษา</span></a>
@@ -155,6 +156,79 @@
       </div>
     </div>
   </div>
+</section>
+
+<!-- ============ ORIGINS / HISTORY TIMELINE ============ -->
+<section class="section narrow" id="origins">
+  <div class="section-head reveal">
+    <span class="kicker"><span lang="en">Where they came from</span><span lang="th">ที่มา</span></span>
+    <h2><span lang="en">A short history of both patterns</span><span lang="th">ประวัติที่มาของทั้งสอง pattern</span></h2>
+    <p class="section-desc"><span lang="en">Neither appeared from nowhere — they're one lineage, each idea building on the last toward the same goal: a framework-free core.</span><span lang="th">ทั้งคู่ไม่ได้เกิดมาลอยๆ — มันคือสายวิวัฒนาการเดียวกันที่ต่อยอดกันมาเรื่อยๆ สู่เป้าหมายเดียวกัน: core ที่ปลอด framework</span></p>
+  </div>
+  <div class="tl-legend reveal">
+    <span><i class="tl-key a"></i><span lang="en">Hexagonal line</span><span lang="th">สาย Hexagonal</span></span>
+    <span><i class="tl-key b"></i><span lang="en">Clean line</span><span lang="th">สาย Clean</span></span>
+    <span><i class="tl-key n"></i><span lang="en">Influences</span><span lang="th">แนวคิดต้นธาร</span></span>
+  </div>
+  <div class="timeline reveal">
+    <div class="tl-item n">
+      <span class="tl-dot n"></span>
+      <span class="tl-year">1992</span>
+      <div class="tl-card">
+        <div class="tl-title">BCE — Boundary · Control · Entity <span class="tl-who">Ivar Jacobson · OOSE</span></div>
+        <p><span lang="en">Splits objects that touch the outside (Boundary) from pure business objects (Entity). The first seed of “keep the core away from I/O”.</span><span lang="th">แยก object ที่แตะโลกภายนอก (Boundary) ออกจาก object ธุรกิจล้วนๆ (Entity) — เมล็ดพันธุ์แรกของแนวคิด “กัน core ออกจาก I/O”</span></p>
+      </div>
+    </div>
+    <div class="tl-item n">
+      <span class="tl-dot n"></span>
+      <span class="tl-year">2003</span>
+      <div class="tl-card">
+        <div class="tl-title">Domain-Driven Design <span class="tl-who">Eric Evans</span></div>
+        <p><span lang="en">Puts the domain model at the centre and pushes infrastructure to the edges — the inner layers of both patterns inherit this mindset.</span><span lang="th">วางโดเมนโมเดลไว้ศูนย์กลาง ดันโครงสร้างพื้นฐานออกไปขอบ — ชั้นในของทั้งสอง pattern สืบแนวคิดนี้มา</span></p>
+      </div>
+    </div>
+    <div class="tl-item a">
+      <span class="tl-dot a"></span>
+      <span class="tl-year">2005</span>
+      <div class="tl-card">
+        <div class="tl-title">Hexagonal — Ports &amp; Adapters <span class="tl-badge a">⬡ Hexagonal</span> <span class="tl-who">Alistair Cockburn</span></div>
+        <p><span lang="en">Cockburn names it “Ports &amp; Adapters”: the core is ringed by symmetric ports and the outside plugs in through adapters. Drawn as a hexagon only to leave room for many ports — not because of six sides.</span><span lang="th">Cockburn ตั้งชื่อ “Ports &amp; Adapters”: core ถูกล้อมด้วย port แบบสมมาตร โลกภายนอกเสียบผ่าน adapter — ที่วาดเป็นหกเหลี่ยมเพื่อให้มีที่วาง port หลายตัว ไม่ใช่เพราะต้องมี 6 ด้าน</span></p>
+      </div>
+    </div>
+    <div class="tl-item n">
+      <span class="tl-dot n"></span>
+      <span class="tl-year">2008</span>
+      <div class="tl-card">
+        <div class="tl-title">Onion Architecture <span class="tl-who">Jeffrey Palermo</span></div>
+        <p><span lang="en">Arranges the core as concentric rings with Inversion of Control — the visual bridge from Hexagonal’s edges to Clean’s circles.</span><span lang="th">จัด core เป็นวงแหวนซ้อนกันด้วย Inversion of Control — เป็นสะพานภาพจาก “ขอบ” ของ Hexagonal ไปสู่ “วงกลม” ของ Clean</span></p>
+      </div>
+    </div>
+    <div class="tl-item b">
+      <span class="tl-dot b"></span>
+      <span class="tl-year">2012</span>
+      <div class="tl-card">
+        <div class="tl-title">Clean Architecture <span class="tl-badge b">◎ Clean</span> <span class="tl-who">Robert C. Martin (Uncle Bob)</span></div>
+        <p><span lang="en">The blog post “The Clean Architecture” (Aug 2012) integrates Hexagonal + Onion + DCI + BCE into four concentric layers under one Dependency Rule: source dependencies point inward only.</span><span lang="th">บล็อก “The Clean Architecture” (ส.ค. 2012) รวม Hexagonal + Onion + DCI + BCE เป็น 4 วงซ้อน ภายใต้ Dependency Rule เดียว: source dependency ชี้เข้าด้านในเท่านั้น</span></p>
+      </div>
+    </div>
+    <div class="tl-item b">
+      <span class="tl-dot b"></span>
+      <span class="tl-year">2017</span>
+      <div class="tl-card">
+        <div class="tl-title">Clean Architecture — the book <span class="tl-who">Robert C. Martin</span></div>
+        <p><span lang="en">“Clean Architecture: A Craftsman’s Guide to Software Structure and Design” collects the ideas into a full book.</span><span lang="th">หนังสือ “Clean Architecture: A Craftsman’s Guide to Software Structure and Design” รวบรวมแนวคิดทั้งหมดเป็นเล่มเต็ม</span></p>
+      </div>
+    </div>
+    <div class="tl-item a">
+      <span class="tl-dot a"></span>
+      <span class="tl-year">2024</span>
+      <div class="tl-card">
+        <div class="tl-title">Hexagonal — the book <span class="tl-who">A. Cockburn &amp; J. M. Garrido de Paz</span></div>
+        <p><span lang="en">Nearly two decades on, Cockburn (with Juan Manuel Garrido de Paz) publishes the definitive Hexagonal book (April 2024).</span><span lang="th">เกือบสองทศวรรษให้หลัง Cockburn (ร่วมกับ Juan Manuel Garrido de Paz) ออกหนังสือ Hexagonal ฉบับสมบูรณ์ (เม.ย. 2024)</span></p>
+      </div>
+    </div>
+  </div>
+  <p class="footnote reveal"><span lang="en">In short: Hexagonal drew the boundary, Onion bent it into rings, and Clean wrote down the rules — so Clean can be read as a stricter superset of Hexagonal.</span><span lang="th">สรุปสั้นๆ: Hexagonal ขีดเส้นขอบ, Onion ดัดให้เป็นวง, แล้ว Clean เขียนกฎลงเป็นลายลักษณ์ — มองได้ว่า Clean คือ superset ที่เข้มงวดกว่าของ Hexagonal</span></p>
 </section>
 
 <!-- ============ FOLDER STRUCTURE ============ -->
