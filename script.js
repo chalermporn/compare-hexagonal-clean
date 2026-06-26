@@ -48,6 +48,8 @@
     else root.removeAttribute('data-theme');
     try { localStorage.setItem('kp-theme', tm); } catch (e) {}
     if (themeBtn) themeBtn.setAttribute('aria-pressed', tm === 'light' ? 'true' : 'false');
+    // diagrams bake theme colors into SVG attrs at build time — redraw to follow the switch
+    if (typeof paintHex === 'function') { paintHex(); paintClean(); paintHero(); }
   }
   if (themeBtn) {
     themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'light' ? 'true' : 'false');
@@ -124,6 +126,11 @@
     const W = 400, H = 400, cx = W / 2, cy = H / 2;
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}` }, container);
 
+    // resting fills follow the active theme (SVG attrs don't inherit CSS vars)
+    const cs = getComputedStyle(document.documentElement);
+    const cBox  = cs.getPropertyValue('--surface-2').trim() || 'rgba(22,27,36,.95)';
+    const cPort = cs.getPropertyValue('--bg').trim() || '#0a0c10';
+
     const defs = el('defs', {}, svg);
     const grad = el('linearGradient', { id: 'hexGrad', x1: '0', y1: '0', x2: '1', y2: '1' }, defs);
     el('stop', { offset: '0%',  'stop-color': '#00A3E4' }, grad);
@@ -169,12 +176,12 @@
         d: `M${ad.x},${ad.y} L${px.toFixed(1)},${py.toFixed(1)}`,
         stroke: 'rgba(0,163,228,.4)', 'stroke-width': '1.6', fill: 'none', 'stroke-dasharray': '4 4'
       }, svg);
-      const port = el('circle', { cx: px, cy: py, r: 6, fill: '#0a0c10', stroke: 'url(#hexGrad)', 'stroke-width': '2', class: 'port' }, svg);
+      const port = el('circle', { cx: px, cy: py, r: 6, fill: cPort, stroke: 'url(#hexGrad)', 'stroke-width': '2', class: 'port' }, svg);
 
       const g = el('g', { class: 'svg-node' }, svg);
       const bw = 76, bh = 34;
       el('rect', { x: ad.x - bw / 2, y: ad.y - bh / 2, width: bw, height: bh, rx: 9,
-        class: 'hex-adapter-box', fill: 'rgba(22,27,36,.95)', stroke: 'rgba(0,163,228,.5)', 'stroke-width': '1.4' }, g);
+        class: 'hex-adapter-box', fill: cBox, stroke: 'rgba(0,163,228,.5)', 'stroke-width': '1.4' }, g);
       const lab = el('text', { x: ad.x, y: ad.y + 4, 'text-anchor': 'middle', class: 'svg-label sm' }, g);
       lab.textContent = ad.label;
       const tag = el('text', { x: ad.x, y: ad.y - bh / 2 - 7, 'text-anchor': 'middle',
@@ -191,7 +198,7 @@
         hexCore.setAttribute('fill', 'rgba(0,163,228,.14)');
       });
       g.addEventListener('mouseleave', () => {
-        port.setAttribute('r', 6); port.setAttribute('fill', '#0a0c10');
+        port.setAttribute('r', 6); port.setAttribute('fill', cPort);
         line.setAttribute('stroke', 'rgba(0,163,228,.4)'); line.setAttribute('stroke-width', '1.6');
         hexCore.setAttribute('fill', 'rgba(0,163,228,.06)');
       });
